@@ -5,8 +5,8 @@ import React from "react";
 const Home = () => {
   return (
     <div>
-      {/* <Pocetak /> */}
-      <Zavrsetak />
+      <Pocetak />
+      {/* <Zavrsetak /> */}
     </div>
   );
 };
