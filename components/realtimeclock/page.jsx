@@ -5,12 +5,10 @@ function RealTimeClock() {
   const [dateTime, setDateTime] = useState(new Date());
 
   useEffect(() => {
-    // Postavi interval za ažuriranje svake sekunde
     const timer = setInterval(() => {
       setDateTime(new Date());
     }, 1000);
 
-    // Očisti interval kada se komponenta uništi
     return () => clearInterval(timer);
   }, []);
 
