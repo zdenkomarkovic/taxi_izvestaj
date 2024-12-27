@@ -9,5 +9,5 @@ const StartSchema = new Schema(
   },
   { timestamps: true }
 );
-const Start = models.Start || model("Start", StartSchema);
+const Start = models?.Start || model("Start", StartSchema);
 export default Start;
