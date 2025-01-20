@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import React from "react";
+import React, { useState } from "react";
 import {
   FormField,
   FormItem,
@@ -18,39 +18,56 @@ const CustomFormField = ({
   readOnly = false,
   onClickButton,
   buttonLabel,
-}) => (
-  <FormField
-    control={control}
-    name={name}
-    render={({ field }) => (
-      <FormItem className="flex w-full flex-col">
-        <FormLabel className="paragraph-semibold text-dark400_light800 flex">
-          {label}{" "}
-        </FormLabel>
-        <FormControl className="mt-2">
-          <div className="flex items-center gap-2">
-            <Input
-              type={type}
-              className="no-focus paragraph-regular background-light700_dark300 light-border-2 text-dark300_light700 min-h-[36px] border"
-              placeholder={placeholder}
-              {...field}
-              readOnly={readOnly}
-            />
-            {onClickButton && (
-              <Button
-                type="button"
-                onClick={onClickButton}
-                className="btn btn-primary"
-              >
-                {buttonLabel}
-              </Button>
+  lastValue = null,
+  children,
+}) => {
+  const [difference, setDifference] = useState(null);
+  return (
+    <FormField
+      control={control}
+      name={name}
+      render={({ field }) => (
+        <FormItem className="flex w-full flex-col">
+          <FormLabel className="paragraph-semibold text-dark400_light800 flex">
+            {label}
+            {children}
+            {lastValue !== null && difference !== null && (
+              <p>
+                ukupno
+                <span className="font-bold px-2">{difference} km</span>{" "}
+              </p>
             )}
-          </div>
-        </FormControl>
-        <FormMessage className="text-red-500" />
-      </FormItem>
-    )}
-  />
-);
-
+          </FormLabel>
+          <FormControl className="mt-2">
+            <div className="flex items-center gap-2">
+              <Input
+                type={type}
+                className="no-focus paragraph-regular background-light700_dark300 light-border-2 text-dark300_light700 min-h-[36px] border"
+                placeholder={placeholder}
+                {...field}
+                readOnly={readOnly}
+                onChange={(e) => {
+                  field.onChange(e);
+                  if (lastValue !== null) {
+                    setDifference(Number(e.target.value) - Number(lastValue));
+                  }
+                }}
+              />
+              {onClickButton && (
+                <Button
+                  type="button"
+                  onClick={onClickButton}
+                  className="btn btn-primary"
+                >
+                  {buttonLabel}
+                </Button>
+              )}
+            </div>
+          </FormControl>
+          <FormMessage className="text-red-500" />
+        </FormItem>
+      )}
+    />
+  );
+};
 export default CustomFormField;

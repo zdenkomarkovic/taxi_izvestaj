@@ -13,13 +13,7 @@ function RealTimeClock() {
   }, []);
 
   return (
-    <div
-      style={{
-        textAlign: "center",
-        fontFamily: "Arial, sans-serif",
-        marginTop: "20px",
-      }}
-    >
+    <div className="mt-10 text-center">
       <h1>
         {dateTime.toLocaleDateString("sr-RS", {
           weekday: "long",

@@ -20,9 +20,11 @@ import {
   GetLastStart,
   GetStarts,
 } from "@/lib/actions/start.action";
+import { GetLastEndShift } from "@/lib/actions/endshift.action";
 
 const StartForm = () => {
   const [lastStart, setLastStart] = useState(null);
+  const [lastEndShift, setLastEndShift] = useState(null);
 
   const router = useRouter();
   const pathname = usePathname();
@@ -64,6 +66,19 @@ const StartForm = () => {
 
     fetchLastStart();
   }, []);
+
+  useEffect(() => {
+    const fetchLastEndShift = async () => {
+      try {
+        const data = await GetLastEndShift();
+        setLastEndShift(data);
+      } catch (error) {
+        console.error("Error fetching lastShift", error);
+      }
+    };
+    fetchLastEndShift();
+  }, []);
+
   return (
     <>
       <div>
@@ -71,7 +86,14 @@ const StartForm = () => {
           <p className="pl-10">
             -{" "}
             <span className="font-bold">
-              {new Date(lastStart.createdAt).toLocaleString()}
+              {new Date(lastStart.createdAt).toLocaleString("sr-RS", {
+                hourCycle: "h23",
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
             </span>
           </p>
         )}
@@ -88,10 +110,10 @@ const StartForm = () => {
                   <FormLabel className="paragraph-semibold text-dark400_light800 flex ">
                     Kilometraza na satu{" "}
                     <span className="text-primary-500">*</span>
-                    {lastStart && (
+                    {lastEndShift && (
                       <p className="pl-10">
                         zadnje upisano -{" "}
-                        <span className="font-bold">{lastStart.kmSat}</span>
+                        <span className="font-bold">{lastEndShift.kmSat}</span>
                       </p>
                     )}
                   </FormLabel>
@@ -115,10 +137,10 @@ const StartForm = () => {
                   <FormLabel className="paragraph-semibold text-dark400_light800 flex ">
                     Kilometraza na taximetru{" "}
                     <span className="text-primary-500">*</span>
-                    {lastStart && (
+                    {lastEndShift && (
                       <p className="pl-10">
                         zadnje upisano -{" "}
-                        <span className="font-bold">{lastStart.kmTax}</span>
+                        <span className="font-bold">{lastEndShift.kmTax}</span>
                       </p>
                     )}
                   </FormLabel>
@@ -141,10 +163,10 @@ const StartForm = () => {
                 <FormItem className="flex w-full flex-col">
                   <FormLabel className="paragraph-semibold text-dark400_light800 flex">
                     Gazna kilometraza<span className="text-primary-500">*</span>{" "}
-                    {lastStart && (
+                    {lastEndShift && (
                       <p className="pl-10">
                         zadnje upisano -{" "}
-                        <span className="font-bold">{lastStart.kmSat}</span>
+                        <span className="font-bold">{lastEndShift.kmGaz}</span>
                       </p>
                     )}
                   </FormLabel>
@@ -168,10 +190,10 @@ const StartForm = () => {
                   <FormLabel className="paragraph-semibold text-dark400_light800 flex">
                     Iznos na taximetru
                     <span className="text-primary-500">*</span>
-                    {lastStart && (
+                    {lastEndShift && (
                       <p className="pl-10">
                         zadnje upisano -{" "}
-                        <span className="font-bold">{lastStart.kmSat}</span>
+                        <span className="font-bold">{lastEndShift.iznos}</span>
                       </p>
                     )}
                   </FormLabel>

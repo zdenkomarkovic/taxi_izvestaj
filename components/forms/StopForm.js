@@ -19,6 +19,7 @@ import { CreateEndshift } from "@/lib/actions/endshift.action";
 import CustomFormField from "../formField/customFormField/page";
 import AddAmountsField from "../formField/addAmountsField/page";
 import ComplexFormField from "../formField/complexFormField/page";
+import { GetLastStart } from "@/lib/actions/start.action";
 
 const StopForm = ({ data }) => {
   const router = useRouter();
@@ -39,10 +40,32 @@ const StopForm = ({ data }) => {
     iznosUmanjenja: "",
     opis: "",
   });
+  const [lastStart, setLastStart] = useState(null);
+
+  useEffect(() => {
+    const fetchLastStart = async () => {
+      try {
+        const data = await GetLastStart();
+        console.log("Last start data:", data); // Provera podataka
+        setLastStart(data);
+        if (data && data.kmSat) {
+          form.reset({
+            ...form.getValues(),
+            kmSatPocetna: data.kmSat,
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching last start:", error);
+      }
+    };
+
+    fetchLastStart();
+  }, []);
 
   const form = useForm({
     resolver: zodResolver(StopSchema),
     defaultValues: {
+      kmSatPocetna: "",
       kmSat: "",
       kmTax: "",
       kmGaz: "",
@@ -92,11 +115,38 @@ const StopForm = ({ data }) => {
 
   const onSubmit = async (values) => {
     try {
+      const kmSatRazlika = lastStart
+        ? Number(values.kmSat) - Number(lastStart.kmSat)
+        : null;
+      const kmTaxRazlika = lastStart
+        ? Number(values.kmTax) - Number(lastStart.kmTax)
+        : null;
+      const kmGazRazlika = lastStart
+        ? Number(values.kmGaz) - Number(lastStart.kmGaz)
+        : null;
+      const iznosRazlika = lastStart
+        ? Number(values.iznos) - Number(lastStart.iznos)
+        : null;
+      const gotovina = lastStart
+        ? Number(values.iznos) -
+          Number(lastStart.iznos) -
+          Number(values.plin) -
+          Number(values.benzin)
+        : null;
       await CreateEndshift({
+        kmSatRazlika: kmSatRazlika,
+        kmSatPocetna: lastStart?.kmSat,
         kmSat: values.kmSat,
+        kmTaxRazlika: kmTaxRazlika,
+        kmTaxPocetna: lastStart?.kmTax,
         kmTax: values.kmTax,
+        kmGazRazlika: kmGazRazlika,
+        kmGazPocetna: lastStart?.kmGaz,
         kmGaz: values.kmGaz,
+        iznosRazlika: iznosRazlika,
+        iznosPocetna: lastStart?.iznos,
         iznos: values.iznos,
+        gotovina: gotovina,
         plin: values.plin,
         benzin: values.benzin,
         pranje: pranje,
@@ -112,6 +162,11 @@ const StopForm = ({ data }) => {
     }
   };
 
+  const predjenaKilometraza =
+    lastStart && form.watch("kmSat")
+      ? form.watch("kmSat") - lastStart.kmSat
+      : 0;
+
   const incrementPogresanStart = () => {
     const newPogresanStart = pogresanStart + 150;
     setPogresanStart(newPogresanStart);
@@ -125,64 +180,79 @@ const StopForm = ({ data }) => {
 
   return (
     <>
-      <div>
+      <div className="z-10 mt-12">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
             className="flex  flex-col gap-5 w-[900px] border p-10 rounded-lg mx-auto"
           >
-            <CustomFormField
-              name="kmSat"
-              label="Kilometraža na satu"
-              placeholder="Unesite kilometražu"
-              control={form.control}
-            />{" "}
-            <CustomFormField
-              name="kmTax"
-              label="Kilometraža na taximetru"
-              placeholder="Unesite kilometražu"
-              control={form.control}
-            />{" "}
-            <CustomFormField
-              name="kmGaz"
-              label="Gazna Kilometraža"
-              placeholder="Unesite kilometražu"
-              control={form.control}
-            />{" "}
-            <CustomFormField
-              name="iznos"
-              label="Iznos na taximetru"
-              placeholder="Unesite iznos na taximetru"
-              control={form.control}
-            />{" "}
-            <CustomFormField
-              name="plin"
-              label="Plin"
-              placeholder="Unesite iznos racuna za plin"
-              control={form.control}
-            />{" "}
-            <CustomFormField
-              name="benzin"
-              label="Benzin"
-              placeholder="Unesite iznos za benzin"
-              control={form.control}
-            />{" "}
-            <CustomFormField
-              name="pranje"
-              label="Pranje"
-              control={form.control}
-              readOnly
-              onClickButton={incrementPranje}
-              buttonLabel="Dodaj 100"
-            />
-            <AddAmountsField
-              title="Naplaćeno karticom"
-              value={naplataKarticom}
-              setValue={setNaplataKarticom}
-              items={kartica}
-              total={ukupnoKarticom}
-              addItem={addAmount}
-            />
+            {" "}
+            <div className="flex items-center gap-2">
+              <CustomFormField
+                name="kmSat"
+                label="Km na satu"
+                control={form.control}
+                lastValue={lastStart?.kmSat}
+              >
+                {lastStart && (
+                  <p className="px-5 ">
+                    <span className="font-bold px-2">{lastStart.kmSat}</span>
+                  </p>
+                )}
+              </CustomFormField>
+              <CustomFormField
+                name="kmTax"
+                label="Km na Tax."
+                control={form.control}
+                lastValue={lastStart?.kmTax}
+              >
+                {lastStart && (
+                  <p className="px-5 ">
+                    <span className="font-bold px-2">{lastStart.kmTax}</span>
+                  </p>
+                )}
+              </CustomFormField>{" "}
+              <CustomFormField
+                name="kmGaz"
+                label="Gazni km"
+                control={form.control}
+                lastValue={lastStart?.kmGaz}
+              >
+                {lastStart && (
+                  <p className="px-5 ">
+                    <span className="font-bold px-2">{lastStart.kmGaz}</span>
+                  </p>
+                )}
+              </CustomFormField>{" "}
+            </div>
+            <div className="grid grid-cols-[1fr_1fr_1fr_2fr] items-center gap-2">
+              <CustomFormField
+                name="plin"
+                label="Plin"
+                control={form.control}
+              />{" "}
+              <CustomFormField
+                name="benzin"
+                label="Benzin"
+                control={form.control}
+              />{" "}
+              <CustomFormField
+                name="pranje"
+                label="Pranje"
+                control={form.control}
+                readOnly
+                onClickButton={incrementPranje}
+                buttonLabel="Dodaj 100"
+              />
+              <AddAmountsField
+                title="kartica"
+                value={naplataKarticom}
+                setValue={setNaplataKarticom}
+                items={kartica}
+                total={ukupnoKarticom}
+                addItem={addAmount}
+              />
+            </div>
             <ComplexFormField
               title="Troškovi"
               items={troskovi}
@@ -203,6 +273,19 @@ const StopForm = ({ data }) => {
               valueKey="iznosUmanjenja"
               descriptionKey="opis"
             />
+            <CustomFormField
+              name="iznos"
+              label="Iznos na taximetru"
+              placeholder="Unesite iznos na taximetru"
+              control={form.control}
+            >
+              {lastStart && (
+                <p className="px-5 ">
+                  zadnje upisano
+                  <span className="font-bold px-2">{lastStart.iznos}</span>
+                </p>
+              )}
+            </CustomFormField>{" "}
             <Button type="submit" className=" w-fit text-xl px-10">
               Kreni
             </Button>
