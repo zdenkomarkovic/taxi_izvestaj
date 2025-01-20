@@ -253,26 +253,28 @@ const StopForm = ({ data }) => {
                 addItem={addAmount}
               />
             </div>
-            <ComplexFormField
-              title="Troškovi"
-              items={troskovi}
-              total={ukupnoTroskovi}
-              newItem={noviTrosak}
-              setNewItem={setNoviTrosak}
-              addItem={dodajTrosak}
-              valueKey="iznosTroska"
-              descriptionKey="opis"
-            />
-            <ComplexFormField
-              title="Umanjenja"
-              items={umanjenje}
-              total={ukupnoUmanjenje}
-              newItem={novoUmanjenje}
-              setNewItem={setNovoUmanjenje}
-              addItem={dodajUmanjenje}
-              valueKey="iznosUmanjenja"
-              descriptionKey="opis"
-            />
+            <div className="flex gap-4">
+              <ComplexFormField
+                title="Troškovi"
+                items={troskovi}
+                total={ukupnoTroskovi}
+                newItem={noviTrosak}
+                setNewItem={setNoviTrosak}
+                addItem={dodajTrosak}
+                valueKey="iznosTroska"
+                descriptionKey="opis"
+              />
+              <ComplexFormField
+                title="Umanjenja"
+                items={umanjenje}
+                total={ukupnoUmanjenje}
+                newItem={novoUmanjenje}
+                setNewItem={setNovoUmanjenje}
+                addItem={dodajUmanjenje}
+                valueKey="iznosUmanjenja"
+                descriptionKey="opis"
+              />
+            </div>
             <CustomFormField
               name="iznos"
               label="Iznos na taximetru"

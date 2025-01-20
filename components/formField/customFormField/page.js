@@ -33,8 +33,7 @@ const CustomFormField = ({
             {children}
             {lastValue !== null && difference !== null && (
               <p>
-                ukupno
-                <span className="font-bold px-2">{difference} km</span>{" "}
+                -<span className="font-bold px-2">{difference} km</span>{" "}
               </p>
             )}
           </FormLabel>
