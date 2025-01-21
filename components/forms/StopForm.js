@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -162,10 +162,13 @@ const StopForm = ({ data }) => {
     }
   };
 
-  const predjenaKilometraza =
-    lastStart && form.watch("kmSat")
-      ? form.watch("kmSat") - lastStart.kmSat
-      : 0;
+  // const kes =
+  //   lastStart && form.watch("iznos")
+  //     ? form.watch("iznos") -
+  //       lastStart.iznos -
+  //       form.watch("plin") -
+  //       form.watch("benzin")
+  //     : 0;
 
   const incrementPogresanStart = () => {
     const newPogresanStart = pogresanStart + 150;
@@ -224,8 +227,21 @@ const StopForm = ({ data }) => {
                   </p>
                 )}
               </CustomFormField>{" "}
+              <CustomFormField
+                name="iznos"
+                label="Iznos"
+                placeholder="Unesite iznos na taximetru"
+                control={form.control}
+                lastValue={lastStart?.iznos}
+              >
+                {lastStart && (
+                  <p className="px-5 ">
+                    <span className="font-bold px-2">{lastStart.iznos}</span>
+                  </p>
+                )}
+              </CustomFormField>{" "}
             </div>
-            <div className="grid grid-cols-[1fr_1fr_1fr_2fr] items-center gap-2">
+            <div className="grid grid-cols-[0.5fr_0.5fr_1fr_1fr] items-center gap-2">
               <CustomFormField
                 name="plin"
                 label="Plin"
@@ -275,19 +291,31 @@ const StopForm = ({ data }) => {
                 descriptionKey="opis"
               />
             </div>
-            <CustomFormField
-              name="iznos"
-              label="Iznos na taximetru"
-              placeholder="Unesite iznos na taximetru"
-              control={form.control}
-            >
-              {lastStart && (
-                <p className="px-5 ">
-                  zadnje upisano
-                  <span className="font-bold px-2">{lastStart.iznos}</span>
+            {lastStart && form.watch("iznos") && (
+              <div className="flex flex-col text-lg">
+                <p>
+                  <strong>odbija se:</strong>{" "}
+                  <span>plin - {form.watch("plin")}</span> -{" "}
+                  <span>benzin - {form.watch("benzin")} </span> -{" "}
+                  <span>pranje - {pranje} </span> -{" "}
+                  <span>kartica - {ukupnoKarticom} </span> -{" "}
+                  <span>troškovi - {ukupnoTroskovi} </span> -
+                  <span>umanjenje - {ukupnoTroskovi} </span> )
                 </p>
-              )}
-            </CustomFormField>{" "}
+                <p>
+                  <strong>Keš ukupno:</strong>{" "}
+                  {form.watch("iznos") -
+                    lastStart.iznos -
+                    form.watch("plin") -
+                    form.watch("benzin") -
+                    ukupnoKarticom -
+                    ukupnoTroskovi -
+                    ukupnoUmanjenje -
+                    pranje}
+                  RSD
+                </p>
+              </div>
+            )}
             <Button type="submit" className=" w-fit text-xl px-10">
               Kreni
             </Button>

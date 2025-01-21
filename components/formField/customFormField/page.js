@@ -28,12 +28,12 @@ const CustomFormField = ({
       name={name}
       render={({ field }) => (
         <FormItem className="flex w-full flex-col">
-          <FormLabel className="paragraph-semibold text-dark400_light800 flex">
+          <FormLabel className="paragraph-semibold text-dark400_light800 flex items-center">
             {label}
             {children}
             {lastValue !== null && difference !== null && (
               <p>
-                -<span className="font-bold px-2">{difference} km</span>{" "}
+                <span className="font-bold">= {difference}</span>{" "}
               </p>
             )}
           </FormLabel>
