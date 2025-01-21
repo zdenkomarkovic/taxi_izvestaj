@@ -15,15 +15,10 @@ import {
 } from "../ui/form";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import {
-  CreateStart,
-  GetLastStart,
-  GetStarts,
-} from "@/lib/actions/start.action";
+import { CreateStart } from "@/lib/actions/start.action";
 import { GetLastEndShift } from "@/lib/actions/endshift.action";
 
 const StartForm = () => {
-  const [lastStart, setLastStart] = useState(null);
   const [lastEndShift, setLastEndShift] = useState(null);
 
   const router = useRouter();
@@ -55,19 +50,6 @@ const StartForm = () => {
   };
 
   useEffect(() => {
-    const fetchLastStart = async () => {
-      try {
-        const data = await GetLastStart();
-        setLastStart(data); // Spremaš plain objekat
-      } catch (error) {
-        console.error("Error fetching last start:", error);
-      }
-    };
-
-    fetchLastStart();
-  }, []);
-
-  useEffect(() => {
     const fetchLastEndShift = async () => {
       try {
         const data = await GetLastEndShift();
@@ -82,11 +64,11 @@ const StartForm = () => {
   return (
     <>
       <div>
-        {lastStart && (
+        {lastEndShift && (
           <p className="pl-10">
             -{" "}
             <span className="font-bold">
-              {new Date(lastStart.createdAt).toLocaleString("sr-RS", {
+              {new Date(lastEndShift.createdAt).toLocaleString("sr-RS", {
                 hourCycle: "h23",
                 year: "numeric",
                 month: "long",

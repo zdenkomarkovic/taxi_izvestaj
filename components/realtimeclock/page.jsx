@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 
 function RealTimeClock() {
-  const [dateTime, setDateTime] = useState(new Date());
+  const [dateTime, setDateTime] = useState(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -11,7 +11,9 @@ function RealTimeClock() {
 
     return () => clearInterval(timer);
   }, []);
-
+  if (!dateTime) {
+    return <div>Loading...</div>;
+  }
   return (
     <div className="mt-10 text-center">
       <h1>
