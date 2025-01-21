@@ -300,7 +300,7 @@ const StopForm = ({ data }) => {
                   <span>pranje - {pranje} </span> -{" "}
                   <span>kartica - {ukupnoKarticom} </span> -{" "}
                   <span>troškovi - {ukupnoTroskovi} </span> -
-                  <span>umanjenje - {ukupnoTroskovi} </span> )
+                  <span>umanjenje - {ukupnoUmanjenje} </span> )
                 </p>
                 <p>
                   <strong>Keš ukupno:</strong>{" "}
