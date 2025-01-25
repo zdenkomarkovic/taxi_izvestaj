@@ -43,7 +43,7 @@ const StartForm = () => {
         iznos: values.iznos,
         path: pathname,
       });
-      router.push("pregled");
+      router.push("endshift");
     } catch (error) {
       console.log(error);
     }
@@ -64,21 +64,6 @@ const StartForm = () => {
   return (
     <>
       <div>
-        {lastEndShift && (
-          <p className="pl-10">
-            -{" "}
-            <span className="font-bold">
-              {new Date(lastEndShift.createdAt).toLocaleString("sr-RS", {
-                hourCycle: "h23",
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
-          </p>
-        )}
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -92,12 +77,12 @@ const StartForm = () => {
                   <FormLabel className="paragraph-semibold text-dark400_light800 flex ">
                     Kilometraza na satu{" "}
                     <span className="text-primary-500">*</span>
-                    {lastEndShift && (
+                    {lastEndShift ? (
                       <p className="pl-10">
                         zadnje upisano -{" "}
                         <span className="font-bold">{lastEndShift.kmSat}</span>
                       </p>
-                    )}
+                    ) : null}
                   </FormLabel>
                   <FormControl className="mt-2">
                     <Input
@@ -119,12 +104,12 @@ const StartForm = () => {
                   <FormLabel className="paragraph-semibold text-dark400_light800 flex ">
                     Kilometraza na taximetru{" "}
                     <span className="text-primary-500">*</span>
-                    {lastEndShift && (
+                    {lastEndShift ? (
                       <p className="pl-10">
                         zadnje upisano -{" "}
                         <span className="font-bold">{lastEndShift.kmTax}</span>
                       </p>
-                    )}
+                    ) : null}
                   </FormLabel>
                   <FormControl className="mt-2">
                     <Input
@@ -145,12 +130,12 @@ const StartForm = () => {
                 <FormItem className="flex w-full flex-col">
                   <FormLabel className="paragraph-semibold text-dark400_light800 flex">
                     Gazna kilometraza<span className="text-primary-500">*</span>{" "}
-                    {lastEndShift && (
+                    {lastEndShift ? (
                       <p className="pl-10">
                         zadnje upisano -{" "}
                         <span className="font-bold">{lastEndShift.kmGaz}</span>
                       </p>
-                    )}
+                    ) : null}
                   </FormLabel>
                   <FormControl className="mt-2">
                     <Input
@@ -172,12 +157,12 @@ const StartForm = () => {
                   <FormLabel className="paragraph-semibold text-dark400_light800 flex">
                     Iznos na taximetru
                     <span className="text-primary-500">*</span>
-                    {lastEndShift && (
+                    {lastEndShift ? (
                       <p className="pl-10">
                         zadnje upisano -{" "}
                         <span className="font-bold">{lastEndShift.iznos}</span>
                       </p>
-                    )}
+                    ) : null}
                   </FormLabel>
                   <FormControl className="mt-2">
                     <Input

@@ -2,21 +2,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import React from "react";
 
-const ComplexFormField = ({
+const ComplexFormField2 = ({
   title,
-  items,
-  total,
+  item,
   newItem,
   setNewItem,
   addItem,
   valueKey = "value",
   descriptionKey = "description",
-  placeholders = { value: "Iznos", description: "Opis" },
+  placeholders = { value: "Iznos", description: "kilometraza" },
 }) => {
   return (
     <div className="flex flex-col gap-1">
       <h3 className="">
-        {title}: {total} rsd
+        {title} - {item[valueKey]} rsd - {item[descriptionKey]}km
       </h3>
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
@@ -25,17 +24,20 @@ const ComplexFormField = ({
             placeholder={placeholders.value}
             value={newItem[valueKey]}
             onChange={(e) =>
-              setNewItem((prev) => ({ ...prev, [valueKey]: e.target.value }))
+              setNewItem((prev) => ({
+                ...prev,
+                [valueKey]: Number(e.target.value),
+              }))
             }
           />
           <Input
-            type="text"
+            type="number"
             placeholder={placeholders.description}
             value={newItem[descriptionKey]}
             onChange={(e) =>
               setNewItem((prev) => ({
                 ...prev,
-                [descriptionKey]: e.target.value,
+                [descriptionKey]: Number(e.target.value),
               }))
             }
           />
@@ -44,15 +46,9 @@ const ComplexFormField = ({
           </Button>
         </div>
       </div>
-      <ul className="mt-3">
-        {items.map((item, index) => (
-          <li key={index} className="text-gray-700">
-            {index + 1}. {item[descriptionKey]} - {item[valueKey]} RSD
-          </li>
-        ))}
-      </ul>
+      <ul className="mt-3"></ul>
     </div>
   );
 };
 
-export default ComplexFormField;
+export default ComplexFormField2;

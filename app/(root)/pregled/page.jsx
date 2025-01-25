@@ -5,11 +5,11 @@ const Pregled = async () => {
   let result = await GetEndShifts();
   return (
     <div className="container px-4 mt-20 mx-auto flex">
-      {result.map((shift, i) => {
+      {result.map((shift) => {
         return (
-          <div key={i} className="border-2 p-5 m-2">
+          <div key={shift._id} className="border-2 p-5 m-2">
             <p className="font-bold pb-2">
-              Kreirano:{" "}
+              {" "}
               {new Date(shift.createdAt).toLocaleDateString("sr-RS", {
                 weekday: "long",
                 year: "numeric",
@@ -21,22 +21,25 @@ const Pregled = async () => {
               })}
             </p>
             <p>
-              Km na satu: {shift.kmSat} - {shift.kmSatPocetna} ={" "}
+              Km sat: {shift.kmSat} - {shift.kmSatPocetna} ={" "}
               {shift.kmSatRazlika}
             </p>
             <p>
-              Km na taximetru: {shift.kmTax} - {shift.kmTaxPocetna} ={" "}
+              Km tax: {shift.kmTax} - {shift.kmTaxPocetna} ={" "}
               {shift.kmTaxRazlika}{" "}
             </p>
             <p>
-              Km gazna: {shift.kmGaz} - {shift.kmGazPocetna} ={" "}
+              Km gaz: {shift.kmGaz} - {shift.kmGazPocetna} ={" "}
               {shift.kmGazRazlika}{" "}
             </p>
-
-            <p>Plin - {shift.plin}</p>
+            <p>
+              Taximetar: {shift.iznos} - {shift.iznosPocetna} ={" "}
+              {shift.iznosRazlika}{" "}
+            </p>
+            <p>
+              Plin: {shift.plin.racun} / km: {shift.plin.kilometraza}
+            </p>
             <p>Benzin - {shift.benzin}</p>
-            <p>Pranje - {shift.pranje}</p>
-            <p>Pogresan start - {shift.pogresanStart}</p>
 
             {shift.kartica && shift.kartica.length > 0 ? (
               <p>
@@ -47,33 +50,45 @@ const Pregled = async () => {
             ) : (
               <p>Nema evidentiranih placanja karticom</p>
             )}
-            {shift.troskovi.map((trosak, n) => {
-              <p key={n}>
-                {trosak.iznosTroska} - {trosak.opis}
-              </p>;
-            })}
 
             {shift.troskovi && shift.troskovi.length > 0 ? (
               <p>
                 <span>Troškovi: </span>
                 {shift.troskovi
-                  .map((trosak) => `${trosak.iznosTroska} (${trosak.opis})`)
-                  .join(" + ")}{" "}
+                  .map((trosak) => `${trosak.iznos} - ${trosak.opis}`)
+                  .join(" / ")}{" "}
                 ={" "}
-                {shift.troskovi.reduce(
-                  (sum, trosak) => sum + trosak.iznosTroska,
-                  0
-                )}
+                {shift.troskovi.reduce((sum, trosak) => sum + trosak.iznos, 0)}
               </p>
             ) : (
               <p>Nema evidentiranih troskova</p>
             )}
+            {shift.prekoRacuna && shift.prekoRacuna.length > 0 ? (
+              <p>
+                <span>Preko racuna: </span>
+                {shift.prekoRacuna
+                  .map((racun) => `${racun.iznos} - ${racun.opis}`)
+                  .join(" / ")}{" "}
+                ={" "}
+                {shift.prekoRacuna.reduce((sum, racun) => sum + racun.iznos, 0)}
+              </p>
+            ) : (
+              <p>Nema evidentirano preko racuna</p>
+            )}
+            {shift.troskovi && shift.troskovi.length > 0 ? (
+              <p>
+                <span>Umanjenje: </span>
+                {shift.umanjenje
+                  .map((item) => `${item.iznos} - ${item.opis}`)
+                  .join(" / ")}{" "}
+                = {shift.umanjenje.reduce((sum, item) => sum + item.iznos, 0)}
+              </p>
+            ) : (
+              <p>Nema evidentiranih umanjenja</p>
+            )}
+
             <p>
-              Taximetar: {shift.iznos} - {shift.iznosPocetna} ={" "}
-              {shift.iznosRazlika}{" "}
-            </p>
-            <p>
-              Gotovina: {shift.iznosRazlika} - plin:{shift.plin} - Benzin:
+              Gotovina: {shift.iznosRazlika} - plin: - Benzin:
               {shift.benzin} = {shift.gotovina}
             </p>
           </div>

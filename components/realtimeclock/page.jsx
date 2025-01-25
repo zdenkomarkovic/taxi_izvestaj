@@ -24,7 +24,7 @@ function RealTimeClock() {
           day: "numeric",
         })}
       </h1>
-      <h2>{dateTime.toLocaleTimeString("sr-RS")}</h2>
+      <p>{dateTime.toLocaleTimeString("sr-RS")}</p>
     </div>
   );
 }
