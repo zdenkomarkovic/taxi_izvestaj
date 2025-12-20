@@ -1,8 +1,15 @@
 import { GetEndShifts } from "@/lib/actions/endshift.action";
+import { auth } from "@/auth";
 import React from "react";
 
 const Pregled = async () => {
-  let result = await GetEndShifts();
+  const session = await auth();
+
+  // Obični korisnici vide samo svoje zapise, admini vide sve
+  const userId =
+    session?.user?.role === "admin" ? null : session?.user?.id;
+
+  let result = await GetEndShifts(userId);
   return (
     <div className="container px-4 mt-20 mx-auto flex">
       {result.map((shift) => {

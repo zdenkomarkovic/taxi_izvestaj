@@ -20,7 +20,7 @@ const endShift = () => {
   }, []);
 
   return (
-    <div>
+    <div className="mt-20">
       <StopForm data={lastStartData} />
     </div>
   );

@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StartSchema } from "@/lib/validations";
+import { useSession } from "next-auth/react";
 import {
   Form,
   FormControl,
@@ -20,6 +21,7 @@ import { GetLastEndShift } from "@/lib/actions/endshift.action";
 
 const StartForm = () => {
   const [lastEndShift, setLastEndShift] = useState(null);
+  const { data: session } = useSession();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -36,11 +38,17 @@ const StartForm = () => {
 
   const onSubmit = async (values) => {
     try {
+      if (!session?.user?.id) {
+        console.error("User ID not found");
+        return;
+      }
+
       await CreateStart({
         kmSat: values.kmSat,
         kmTax: values.kmTax,
         kmGaz: values.kmGaz,
         iznos: values.iznos,
+        userId: session.user.id,
         path: pathname,
       });
       router.push("endshift");
@@ -52,14 +60,21 @@ const StartForm = () => {
   useEffect(() => {
     const fetchLastEndShift = async () => {
       try {
-        const data = await GetLastEndShift();
+        if (!session?.user?.id) return;
+
+        // Obični korisnici vide samo svoje zapise
+        const userId = session.user.role === "admin" ? null : session.user.id;
+        const data = await GetLastEndShift(userId);
         setLastEndShift(data);
       } catch (error) {
         console.error("Error fetching lastShift", error);
       }
     };
-    fetchLastEndShift();
-  }, []);
+
+    if (session) {
+      fetchLastEndShift();
+    }
+  }, [session]);
 
   return (
     <>

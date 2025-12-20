@@ -9,6 +9,7 @@ const ComplexFormField = ({
   newItem,
   setNewItem,
   addItem,
+  removeItem,
   valueKey = "value",
   descriptionKey = "description",
   placeholders = { value: "Iznos", description: "Opis" },
@@ -44,10 +45,22 @@ const ComplexFormField = ({
           </Button>
         </div>
       </div>
-      <ul className="mt-3">
+      <ul className="mt-3 flex flex-col gap-2">
         {items.map((item, index) => (
-          <li key={index} className="text-gray-700">
-            {index + 1}. {item[descriptionKey]} - {item[valueKey]} RSD
+          <li key={index} className="flex items-center justify-between bg-gray-100 rounded px-3 py-1">
+            <span className="text-gray-700">
+              {index + 1}. {item[descriptionKey]} - {item[valueKey]} RSD
+            </span>
+            {removeItem && (
+              <button
+                type="button"
+                onClick={() => removeItem(index)}
+                className="text-red-600 hover:text-red-800 font-bold text-sm ml-2"
+                title="Obriši"
+              >
+                ✕
+              </button>
+            )}
           </li>
         ))}
       </ul>

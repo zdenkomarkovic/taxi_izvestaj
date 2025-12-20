@@ -8,15 +8,30 @@ const ComplexFormField2 = ({
   newItem,
   setNewItem,
   addItem,
+  removeItem,
   valueKey = "value",
   descriptionKey = "description",
   placeholders = { value: "Iznos", description: "kilometraza" },
 }) => {
+  const hasValue = item[valueKey] && item[descriptionKey];
+
   return (
     <div className="flex flex-col gap-1">
-      <h3 className="">
-        {title} - {item[valueKey]} rsd - {item[descriptionKey]}km
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="">
+          {title} - {item[valueKey]} rsd - {item[descriptionKey]}km
+        </h3>
+        {hasValue && removeItem && (
+          <button
+            type="button"
+            onClick={removeItem}
+            className="text-red-600 hover:text-red-800 font-bold text-sm"
+            title="Obriši"
+          >
+            ✕
+          </button>
+        )}
+      </div>
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
           <Input

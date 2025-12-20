@@ -5,6 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { StopSchema } from "@/lib/validations";
+import { useSession } from "next-auth/react";
 import { Form } from "../ui/form";
 import { Button } from "../ui/button";
 import { CreateEndshift } from "@/lib/actions/endshift.action";
@@ -15,6 +16,7 @@ import { GetLastStart } from "@/lib/actions/start.action";
 import ComplexFormField2 from "../formField/complexFormField2";
 
 const StopForm = ({ data }) => {
+  const { data: session } = useSession();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -47,7 +49,11 @@ const StopForm = ({ data }) => {
   useEffect(() => {
     const fetchLastStart = async () => {
       try {
-        const data = await GetLastStart();
+        if (!session?.user?.id) return;
+
+        // Obični korisnici vide samo svoje zapise
+        const userId = session.user.role === "admin" ? null : session.user.id;
+        const data = await GetLastStart(userId);
         console.log("Last start data:", data);
         setLastStart(data);
         if (data && data.kmSat) {
@@ -61,8 +67,10 @@ const StopForm = ({ data }) => {
       }
     };
 
-    fetchLastStart();
-  }, []);
+    if (session) {
+      fetchLastStart();
+    }
+  }, [session]);
 
   const form = useForm({
     resolver: zodResolver(StopSchema),
@@ -97,6 +105,11 @@ const StopForm = ({ data }) => {
     }
   };
 
+  const obrisiPlin = () => {
+    setPlin({ racun: "", kilometraza: "" });
+    setNoviPlin({ racun: "", kilometraza: "" });
+  };
+
   const addAmount = () => {
     if (!naplataKarticom || isNaN(naplataKarticom)) return;
 
@@ -105,6 +118,12 @@ const StopForm = ({ data }) => {
     setKartica((prevAmounts) => [...prevAmounts, newAmount]);
     setUkupnoKarticom((prevTotal) => prevTotal + newAmount);
     setNaplataKarticom("");
+  };
+
+  const removeAmount = (index) => {
+    const removedAmount = kartica[index];
+    setKartica((prevAmounts) => prevAmounts.filter((_, i) => i !== index));
+    setUkupnoKarticom((prevTotal) => prevTotal - removedAmount);
   };
 
   const dodajPrekoRacuna = () => {
@@ -117,6 +136,12 @@ const StopForm = ({ data }) => {
     setNovoPrekoRacuna({ iznos: "", opis: "" });
   };
 
+  const obrisiPrekoRacuna = (index) => {
+    const removedItem = prekoRacuna[index];
+    setPrekoRacuna((prev) => prev.filter((_, i) => i !== index));
+    setUkupnoPrekoRacuna((prevTotal) => prevTotal - removedItem.iznos);
+  };
+
   const dodajTrosak = () => {
     const { iznos, opis } = noviTrosak;
     if (!iznos || isNaN(iznos) || !opis.trim()) return;
@@ -125,6 +150,12 @@ const StopForm = ({ data }) => {
     setTroskovi((prev) => [...prev, { iznos: parsedIznos, opis }]);
     setUkupnoTroskovi((prevTotal) => prevTotal + parsedIznos);
     setNoviTrosak({ iznos: "", opis: "" });
+  };
+
+  const obrisiTrosak = (index) => {
+    const removedItem = troskovi[index];
+    setTroskovi((prev) => prev.filter((_, i) => i !== index));
+    setUkupnoTroskovi((prevTotal) => prevTotal - removedItem.iznos);
   };
 
   const dodajUmanjenje = () => {
@@ -137,8 +168,19 @@ const StopForm = ({ data }) => {
     setNovoUmanjenje({ iznos: "", opis: "" });
   };
 
+  const obrisiUmanjenje = (index) => {
+    const removedItem = umanjenje[index];
+    setUmanjenje((prev) => prev.filter((_, i) => i !== index));
+    setUkupnoUmanjenje((prevTotal) => prevTotal - removedItem.iznos);
+  };
+
   const onSubmit = async (values) => {
     try {
+      if (!session?.user?.id) {
+        console.error("User ID not found");
+        return;
+      }
+
       const kmSatRazlika = lastStart
         ? Number(values.kmSat) - Number(lastStart.kmSat)
         : null;
@@ -177,6 +219,7 @@ const StopForm = ({ data }) => {
         prekoRacuna: prekoRacuna,
         troskovi: troskovi,
         umanjenje: umanjenje,
+        userId: session.user.id,
         path: pathname,
       });
 
@@ -259,6 +302,7 @@ const StopForm = ({ data }) => {
                 items={kartica}
                 total={ukupnoKarticom}
                 addItem={addAmount}
+                removeItem={removeAmount}
               />
             </div>
             <div className="grid grid-cols-2 gap-3">
@@ -268,6 +312,7 @@ const StopForm = ({ data }) => {
                 newItem={noviPlin}
                 setNewItem={setNoviPlin}
                 addItem={dodajPlin}
+                removeItem={obrisiPlin}
                 valueKey="racun"
                 descriptionKey="kilometraza"
               />
@@ -278,6 +323,7 @@ const StopForm = ({ data }) => {
                 newItem={novoPrekoRacuna}
                 setNewItem={setNovoPrekoRacuna}
                 addItem={dodajPrekoRacuna}
+                removeItem={obrisiPrekoRacuna}
                 valueKey="iznos"
                 descriptionKey="opis"
               />
@@ -290,6 +336,7 @@ const StopForm = ({ data }) => {
                 newItem={noviTrosak}
                 setNewItem={setNoviTrosak}
                 addItem={dodajTrosak}
+                removeItem={obrisiTrosak}
                 valueKey="iznos"
                 descriptionKey="opis"
               />
@@ -300,6 +347,7 @@ const StopForm = ({ data }) => {
                 newItem={novoUmanjenje}
                 setNewItem={setNovoUmanjenje}
                 addItem={dodajUmanjenje}
+                removeItem={obrisiUmanjenje}
                 valueKey="iznos"
                 descriptionKey="opis"
               />

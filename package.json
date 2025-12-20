@@ -6,15 +6,20 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "create-admin": "node scripts/create-admin.js",
+    "migrate": "node scripts/migrate-data.js",
+    "fix-admin": "node scripts/fix-admin-role.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.1",
     "@radix-ui/react-label": "^2.1.1",
     "@radix-ui/react-slot": "^1.1.1",
     "@radix-ui/react-toast": "^1.2.4",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.469.0",
     "mongodb": "^6.12.0",
     "mongoose": "^8.9.2",
