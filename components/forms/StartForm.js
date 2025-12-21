@@ -90,7 +90,7 @@ const StartForm = () => {
               render={({ field }) => (
                 <FormItem className="flex w-full flex-col">
                   <FormLabel className="paragraph-semibold text-dark400_light800 flex ">
-                    Kilometraza na satu{" "}
+                    Kilometraza na satuu{" "}
                     <span className="text-primary-500">*</span>
                     {lastEndShift ? (
                       <p className="pl-10">
