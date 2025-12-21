@@ -4,7 +4,9 @@
       "Bash(npm install:*)",
       "Bash(npm run create-admin:*)",
       "Bash(npm run migrate:*)",
-      "Bash(npm run fix-admin:*)"
+      "Bash(npm run fix-admin:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)"
     ]
   }
 }
