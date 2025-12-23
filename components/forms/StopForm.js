@@ -278,7 +278,7 @@ const StopForm = ({ data }) => {
             onSubmit={form.handleSubmit(onSubmit, (errors) => {
               console.log("Validation errors:", errors);
             })}
-            className="flex  flex-col   border p-3 rounded-lg mr-auto"
+            className="flex  flex-col   border p-3 rounded-lg ml-auto"
           >
             {" "}
             {/* Sekcija za početne vrednosti */}
@@ -408,7 +408,7 @@ const StopForm = ({ data }) => {
               />
             </div>
             {form.watch("iznosPocetna") && form.watch("iznos") && (
-              <div className="flex flex-col text-lg absolute right-4 w-[300px]">
+              <div className="flex flex-col text-lg absolute left-4 w-[300px]">
                 <p>
                   <p>{plin.racun} - plin</p>
                   <p>{ukupnoBenzin} - benzin</p>
