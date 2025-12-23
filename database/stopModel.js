@@ -19,7 +19,7 @@ const StopSchema = new Schema(
       racun: { type: Number, default: 0 },
       kilometraza: { type: Number, default: 0 },
     },
-    benzin: { type: Number, default: 0 },
+    benzin: [{ type: Number, default: 0 }],
     kartica: [{ type: Number, default: 0 }],
     prekoRacuna: [
       {

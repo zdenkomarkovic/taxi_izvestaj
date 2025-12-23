@@ -12,22 +12,27 @@ const Navbar = () => {
       <div className="container mx-auto px-5 py-3 flex items-center justify-between">
         <div className="flex gap-5 uppercase">
           <Link href={"/"} className="hover:text-blue-600 transition">
-            Upis
+            Početna
           </Link>
           <Link href={"pregled"} className="hover:text-blue-600 transition">
             Pregled
           </Link>
-          <Link href={"endshift"} className="hover:text-blue-600 transition">
-            Kraj smene
+          <Link href={"pregled-po-danima"} className="hover:text-blue-600 transition">
+            Po danima
           </Link>
           {session?.user?.role === "admin" && (
-            <Link href={"admin"} className="hover:text-blue-600 transition">
-              Admin
-            </Link>
+            <>
+              <Link href={"admin"} className="hover:text-blue-600 transition">
+                Admin
+              </Link>
+              <Link
+                href={"change-password"}
+                className="hover:text-blue-600 transition text-xs"
+              >
+                Promeni lozinku
+              </Link>
+            </>
           )}
-          <Link href={"change-password"} className="hover:text-blue-600 transition text-xs">
-            Promeni lozinku
-          </Link>
         </div>
 
         {session && (

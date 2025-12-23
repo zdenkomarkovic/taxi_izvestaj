@@ -15,6 +15,14 @@ export async function POST(request) {
       );
     }
 
+    // Proveri da li je korisnik admin
+    if (session.user.role !== "admin") {
+      return NextResponse.json(
+        { error: "Samo administratori mogu da menjaju lozinke" },
+        { status: 403 }
+      );
+    }
+
     const body = await request.json();
     const { currentPassword, newPassword } = body;
 

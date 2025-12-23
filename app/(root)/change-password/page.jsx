@@ -32,6 +32,16 @@ const ChangePasswordPage = () => {
     );
   }
 
+  if (session.user?.role !== "admin") {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-lg text-red-600">
+          Samo administratori mogu da pristupe ovoj stranici
+        </p>
+      </div>
+    );
+  }
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");

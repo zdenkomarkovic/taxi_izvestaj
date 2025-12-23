@@ -17,6 +17,7 @@ function RealTimeClock() {
   return (
     <div className="mt-10 text-center">
       <h1>
+        {dateTime.toLocaleTimeString("sr-RS")}{" "}
         {dateTime.toLocaleDateString("sr-RS", {
           weekday: "long",
           year: "numeric",
@@ -24,7 +25,6 @@ function RealTimeClock() {
           day: "numeric",
         })}
       </h1>
-      <p>{dateTime.toLocaleTimeString("sr-RS")}</p>
     </div>
   );
 }
