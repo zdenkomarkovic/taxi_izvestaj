@@ -272,13 +272,13 @@ const StopForm = ({ data }) => {
 
   return (
     <>
-      <div className=" relative px-4 flex">
+      <div className=" relative container px-4 flex lg:mx-auto">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit, (errors) => {
               console.log("Validation errors:", errors);
             })}
-            className="flex  flex-col   border p-3 rounded-lg ml-auto"
+            className="flex  flex-col   border p-3 rounded-lg ml-auto lg:mx-auto"
           >
             {" "}
             {/* Sekcija za početne vrednosti */}
