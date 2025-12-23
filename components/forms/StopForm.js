@@ -161,7 +161,10 @@ const StopForm = ({ data }) => {
     if (!iznos || isNaN(iznos)) return;
 
     const parsedPrekoRacuna = parseFloat(iznos);
-    setPrekoRacuna((prev) => [...prev, { iznos: parsedPrekoRacuna, opis: opis || "" }]);
+    setPrekoRacuna((prev) => [
+      ...prev,
+      { iznos: parsedPrekoRacuna, opis: opis || "" },
+    ]);
     setUkupnoPrekoRacuna((prevTotal) => prevTotal + parsedPrekoRacuna);
     setNovoPrekoRacuna({ iznos: "", opis: "" });
   };
@@ -193,7 +196,10 @@ const StopForm = ({ data }) => {
     if (!iznos || isNaN(iznos)) return;
 
     const parsedUmanjenje = parseFloat(iznos);
-    setUmanjenje((prev) => [...prev, { iznos: parsedUmanjenje, opis: opis || "" }]);
+    setUmanjenje((prev) => [
+      ...prev,
+      { iznos: parsedUmanjenje, opis: opis || "" },
+    ]);
     setUkupnoUmanjenje((prevTotal) => prevTotal + parsedUmanjenje);
     setNovoUmanjenje({ iznos: "", opis: "" });
   };
@@ -266,13 +272,13 @@ const StopForm = ({ data }) => {
 
   return (
     <>
-      <div className="z-10 relative container mx-auto px-4 flex">
+      <div className=" relative px-4 flex">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit, (errors) => {
               console.log("Validation errors:", errors);
             })}
-            className="flex  flex-col   border p-3 rounded-lg mx-auto"
+            className="flex  flex-col   border p-3 rounded-lg mr-auto"
           >
             {" "}
             {/* Sekcija za početne vrednosti */}
@@ -402,7 +408,7 @@ const StopForm = ({ data }) => {
               />
             </div>
             {form.watch("iznosPocetna") && form.watch("iznos") && (
-              <div className="flex flex-col text-lg absolute left-4 w-[300px]">
+              <div className="flex flex-col text-lg absolute right-4 w-[300px]">
                 <p>
                   <p>{plin.racun} - plin</p>
                   <p>{ukupnoBenzin} - benzin</p>
