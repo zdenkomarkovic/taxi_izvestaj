@@ -174,7 +174,7 @@ const Pregled = () => {
 
   return (
     <>
-      <div className="container px-4 mt-20 mx-auto grid grid-cols-3 lg:grid-cols-4">
+      <div className="lg:container px-4 mt-20 mx-auto grid grid-cols-3 lg:grid-cols-4">
         {result.map((shift) => {
           // Proveri da li je ovaj zapis poslednji u CELOM sistemu
           const isLastRecord = shift._id === lastRecordId;

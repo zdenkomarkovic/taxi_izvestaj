@@ -228,11 +228,15 @@ const StopForm = ({ data }) => {
       const kmSatRazlika = Number(values.kmSat) - kmSatPocetna;
       const kmTaxRazlika = Number(values.kmTax) - kmTaxPocetna;
       const kmGazRazlika = Number(values.kmGaz) - kmGazPocetna;
-      const iznosRazlika = Number(values.iznos) - iznosPocetna;
+
+      // Izračunaj iznos razliku - ako je negativna, prešlo je preko 1,000,000
+      let iznosRazlika = Number(values.iznos) - iznosPocetna;
+      if (iznosRazlika < 0) {
+        iznosRazlika = 1000000 - iznosPocetna + Number(values.iznos);
+      }
 
       const gotovina =
-        Number(values.iznos) -
-        iznosPocetna -
+        iznosRazlika -
         Number(plin.racun) -
         ukupnoBenzin -
         ukupnoKarticom -
@@ -272,17 +276,17 @@ const StopForm = ({ data }) => {
 
   return (
     <>
-      <div className=" relative container px-4 flex lg:mx-auto">
+      <div className=" relative lg:container pl-48 pr-2 flex ml-auto lg:mx-auto">
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit, (errors) => {
               console.log("Validation errors:", errors);
             })}
-            className="flex  flex-col   border p-3 rounded-lg ml-auto lg:mx-auto"
+            className="flex container flex-col   border p-3 rounded-lg ml-auto"
           >
             {" "}
             {/* Sekcija za početne vrednosti */}
-            <div className=" bg-blue-50 p-3 rounded-lg">
+            <div className=" bg-blue-50 p-1 rounded-lg">
               <div className="flex items-center gap-2">
                 <EditableValueField
                   name="kmSatPocetna"
@@ -311,7 +315,7 @@ const StopForm = ({ data }) => {
               </div>
             </div>
             {/* Sekcija za krajnje vrednosti */}
-            <div className="bg-green-50 p-3 rounded-lg">
+            <div className="bg-green-50 p-1 rounded-lg">
               <div className="flex items-center gap-2">
                 <CustomFormField
                   name="kmSat"
@@ -419,14 +423,26 @@ const StopForm = ({ data }) => {
                 </p>
                 <p>
                   <strong>Keš:</strong>{" "}
-                  {Number(form.watch("iznos")) -
-                    Number(form.watch("iznosPocetna")) -
-                    Number(plin.racun) -
-                    ukupnoBenzin -
-                    ukupnoPrekoRacuna -
-                    ukupnoKarticom -
-                    ukupnoTroskovi -
-                    ukupnoUmanjenje}
+                  {(() => {
+                    let razlika =
+                      Number(form.watch("iznos")) -
+                      Number(form.watch("iznosPocetna"));
+                    if (razlika < 0) {
+                      razlika =
+                        1000000 -
+                        Number(form.watch("iznosPocetna")) +
+                        Number(form.watch("iznos"));
+                    }
+                    return (
+                      razlika -
+                      Number(plin.racun) -
+                      ukupnoBenzin -
+                      ukupnoPrekoRacuna -
+                      ukupnoKarticom -
+                      ukupnoTroskovi -
+                      ukupnoUmanjenje
+                    );
+                  })()}
                 </p>
               </div>
             )}
