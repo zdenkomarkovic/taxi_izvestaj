@@ -229,9 +229,9 @@ const StopForm = ({ data }) => {
       const kmTaxRazlika = Number(values.kmTax) - kmTaxPocetna;
       const kmGazRazlika = Number(values.kmGaz) - kmGazPocetna;
 
-      // Izračunaj iznos razliku - ako je negativna, prešlo je preko 1,000,000
+      // Izračunaj iznos razliku - ako je negativna i početna vrednost >900000, prešlo je preko 1,000,000
       let iznosRazlika = Number(values.iznos) - iznosPocetna;
-      if (iznosRazlika < 0) {
+      if (iznosRazlika < 0 && iznosPocetna > 900000) {
         iznosRazlika = 1000000 - iznosPocetna + Number(values.iznos);
       }
 
@@ -414,12 +414,28 @@ const StopForm = ({ data }) => {
             {form.watch("iznosPocetna") && form.watch("iznos") && (
               <div className="flex flex-col text-lg absolute left-4 w-[300px]">
                 <p>
+                  <p>
+                    {(() => {
+                      let razlika =
+                        Number(form.watch("iznos")) -
+                        Number(form.watch("iznosPocetna"));
+                      // Primeni milionsku logiku samo ako je početna vrednost >900000
+                      if (razlika < 0 && Number(form.watch("iznosPocetna")) > 900000) {
+                        razlika =
+                          1000000 -
+                          Number(form.watch("iznosPocetna")) +
+                          Number(form.watch("iznos"));
+                      }
+                      // Oduzmi umanjenje od iznosa
+                      return razlika - ukupnoUmanjenje;
+                    })()} - iznos
+                  </p>
+                  <p>{ukupnoUmanjenje} - umanjenje</p>
                   <p>{plin.racun} - plin</p>
                   <p>{ukupnoBenzin} - benzin</p>
                   <p>{ukupnoKarticom} - kartica</p>
                   <p>{ukupnoPrekoRacuna} - preko racuna</p>
                   <p>{ukupnoTroskovi} - troškovi</p>
-                  <p>{ukupnoUmanjenje} - umanjenje</p>
                 </p>
                 <p>
                   <strong>Keš:</strong>{" "}
@@ -427,7 +443,8 @@ const StopForm = ({ data }) => {
                     let razlika =
                       Number(form.watch("iznos")) -
                       Number(form.watch("iznosPocetna"));
-                    if (razlika < 0) {
+                    // Primeni milionsku logiku samo ako je početna vrednost >900000
+                    if (razlika < 0 && Number(form.watch("iznosPocetna")) > 900000) {
                       razlika =
                         1000000 -
                         Number(form.watch("iznosPocetna")) +

@@ -215,7 +215,10 @@ const Pregled = () => {
               </p>
               <p>
                 Taximetar: {shift.iznos} - {shift.iznosPocetna} ={" "}
-                <b>{shift.iznosRazlika}</b>
+                <b>
+                  {shift.iznosRazlika -
+                    (shift.umanjenje?.reduce((sum, item) => sum + item.iznos, 0) || 0)}
+                </b>
               </p>
               <p>
                 Plin: {shift.plin.racun} / km: {shift.plin.kilometraza}

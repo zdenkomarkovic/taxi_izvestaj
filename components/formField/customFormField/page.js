@@ -48,9 +48,16 @@ const CustomFormField = ({
                 onChange={(e) => {
                   field.onChange(e);
                   if (lastValue !== null) {
+                    // Ako je input prazan, postavi difference na null
+                    if (!e.target.value || e.target.value === "") {
+                      setDifference(null);
+                      return;
+                    }
+
                     let diff = Number(e.target.value) - Number(lastValue);
-                    // Ako je razlika negativna, znači da je prešlo preko 1,000,000
-                    if (diff < 0) {
+                    // Ako je razlika negativna i početna vrednost je blizu miliona (>900000)
+                    // znači da je prešlo preko 1,000,000
+                    if (diff < 0 && Number(lastValue) > 900000) {
                       diff = (1000000 - Number(lastValue)) + Number(e.target.value);
                     }
                     setDifference(diff);

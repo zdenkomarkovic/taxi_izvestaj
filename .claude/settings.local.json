@@ -6,7 +6,8 @@
       "Bash(npm run migrate:*)",
       "Bash(npm run fix-admin:*)",
       "Bash(npm run build:*)",
-      "Bash(npm run dev:*)"
+      "Bash(npm run dev:*)",
+      "Bash(node scripts/add-multiplier-to-users.js:*)"
     ]
   }
 }
