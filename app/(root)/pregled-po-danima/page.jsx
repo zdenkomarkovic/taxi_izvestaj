@@ -178,7 +178,9 @@ const PregledPoDanima = () => {
 
   return (
     <div className="container px-4 mt-20 mx-auto">
-      <h1 className="text-2xl font-bold mb-6">Pregled iznosa razlike po mesecima i nedeljama</h1>
+      <h1 className="text-2xl font-bold mb-6">
+        Pregled iznosa razlike po mesecima i nedeljama
+      </h1>
 
       {Object.keys(groupedData).length === 0 ? (
         <p>Nema podataka za prikaz.</p>
@@ -193,138 +195,135 @@ const PregledPoDanima = () => {
             })
             .map(([monthYear, weeks]) => {
               // Izračunaj ukupno za mesec
-              const monthTotal = Object.values(weeks).reduce(
-                (total, week) => {
-                  return (
-                    total +
-                    Object.values(week.users).reduce(
-                      (weekTotal, shifts) =>
-                        weekTotal +
-                        shifts.reduce(
-                          (sum, shift) =>
-                            sum +
-                            ((shift.iznosRazlika || 0) -
-                              (shift.umanjenje?.reduce((s, item) => s + item.iznos, 0) || 0)),
-                          0
-                        ),
-                      0
-                    )
-                  );
-                },
-                0
-              );
+              const monthTotal = Object.values(weeks).reduce((total, week) => {
+                return (
+                  total +
+                  Object.values(week.users).reduce(
+                    (weekTotal, shifts) =>
+                      weekTotal +
+                      shifts.reduce(
+                        (sum, shift) =>
+                          sum +
+                          ((shift.iznosRazlika || 0) -
+                            (shift.umanjenje?.reduce(
+                              (s, item) => s + item.iznos,
+                              0
+                            ) || 0)),
+                        0
+                      ),
+                    0
+                  )
+                );
+              }, 0);
 
               // Izračunaj ukupno kartice za mesec (samo za admina)
               const monthCardTotal = isAdmin
-                ? Object.values(weeks).reduce(
-                    (total, week) => {
-                      return (
-                        total +
-                        Object.values(week.users).reduce(
-                          (weekTotal, shifts) =>
-                            weekTotal +
-                            shifts.reduce(
-                              (sum, shift) =>
-                                sum +
-                                (shift.kartica?.reduce((s, amount) => s + amount, 0) || 0),
-                              0
-                            ),
-                          0
-                        )
-                      );
-                    },
-                    0
-                  )
+                ? Object.values(weeks).reduce((total, week) => {
+                    return (
+                      total +
+                      Object.values(week.users).reduce(
+                        (weekTotal, shifts) =>
+                          weekTotal +
+                          shifts.reduce(
+                            (sum, shift) =>
+                              sum +
+                              (shift.kartica?.reduce(
+                                (s, amount) => s + amount,
+                                0
+                              ) || 0),
+                            0
+                          ),
+                        0
+                      )
+                    );
+                  }, 0)
                 : 0;
 
               // Izračunaj ukupno plin za mesec (samo za admina)
               const monthPlinTotal = isAdmin
-                ? Object.values(weeks).reduce(
-                    (total, week) => {
-                      return (
-                        total +
-                        Object.values(week.users).reduce(
-                          (weekTotal, shifts) =>
-                            weekTotal +
-                            shifts.reduce(
-                              (sum, shift) => sum + (shift.plin?.racun || 0),
-                              0
-                            ),
-                          0
-                        )
-                      );
-                    },
-                    0
-                  )
+                ? Object.values(weeks).reduce((total, week) => {
+                    return (
+                      total +
+                      Object.values(week.users).reduce(
+                        (weekTotal, shifts) =>
+                          weekTotal +
+                          shifts.reduce(
+                            (sum, shift) => sum + (shift.plin?.racun || 0),
+                            0
+                          ),
+                        0
+                      )
+                    );
+                  }, 0)
                 : 0;
 
               // Izračunaj ukupno benzin za mesec (samo za admina)
               const monthBenzinTotal = isAdmin
-                ? Object.values(weeks).reduce(
-                    (total, week) => {
-                      return (
-                        total +
-                        Object.values(week.users).reduce(
-                          (weekTotal, shifts) =>
-                            weekTotal +
-                            shifts.reduce(
-                              (sum, shift) =>
-                                sum +
-                                (shift.benzin?.reduce((s, amount) => s + amount, 0) || 0),
-                              0
-                            ),
-                          0
-                        )
-                      );
-                    },
-                    0
-                  )
+                ? Object.values(weeks).reduce((total, week) => {
+                    return (
+                      total +
+                      Object.values(week.users).reduce(
+                        (weekTotal, shifts) =>
+                          weekTotal +
+                          shifts.reduce(
+                            (sum, shift) =>
+                              sum +
+                              (shift.benzin?.reduce(
+                                (s, amount) => s + amount,
+                                0
+                              ) || 0),
+                            0
+                          ),
+                        0
+                      )
+                    );
+                  }, 0)
                 : 0;
 
               // Izračunaj ukupno troskovi za mesec (samo za admina)
               const monthTroskoviTotal = isAdmin
-                ? Object.values(weeks).reduce(
-                    (total, week) => {
-                      return (
-                        total +
-                        Object.values(week.users).reduce(
-                          (weekTotal, shifts) =>
-                            weekTotal +
-                            shifts.reduce(
-                              (sum, shift) =>
-                                sum +
-                                (shift.troskovi?.reduce((s, item) => s + item.iznos, 0) || 0),
-                              0
-                            ),
-                          0
-                        )
-                      );
-                    },
-                    0
-                  )
+                ? Object.values(weeks).reduce((total, week) => {
+                    return (
+                      total +
+                      Object.values(week.users).reduce(
+                        (weekTotal, shifts) =>
+                          weekTotal +
+                          shifts.reduce(
+                            (sum, shift) =>
+                              sum +
+                              (shift.troskovi?.reduce(
+                                (s, item) => s + item.iznos,
+                                0
+                              ) || 0),
+                            0
+                          ),
+                        0
+                      )
+                    );
+                  }, 0)
                 : 0;
 
               // Izračunaj ukupno preko racuna za mesec (samo za admina)
               const monthPrekoRacunaTotal = isAdmin
-                ? Object.values(weeks).reduce(
-                    (total, week) => {
-                      return (
-                        total +
-                        Object.values(week.users).reduce(
-                          (weekTotal, shifts) =>
-                            weekTotal +
-                            shifts.reduce(
-                              (sum, shift) =>
-                                sum +
-                                (shift.prekoRacuna?.reduce((s, item) => s + item.iznos, 0) || 0),
-                              0
-                            ),
-                          0
-                        )
-                      );
-                    },
-                    0
-                  )
+                ? Object.values(weeks).reduce((total, week) => {
+                    return (
+                      total +
+                      Object.values(week.users).reduce(
+                        (weekTotal, shifts) =>
+                          weekTotal +
+                          shifts.reduce(
+                            (sum, shift) =>
+                              sum +
+                              (shift.prekoRacuna?.reduce(
+                                (s, item) => s + item.iznos,
+                                0
+                              ) || 0),
+                            0
+                          ),
+                        0
+                      )
+                    );
+                  }, 0)
                 : 0;
 
               return (
@@ -350,7 +349,10 @@ const PregledPoDanima = () => {
                               (sum, shift) =>
                                 sum +
                                 ((shift.iznosRazlika || 0) -
-                                  (shift.umanjenje?.reduce((s, item) => s + item.iznos, 0) || 0)),
+                                  (shift.umanjenje?.reduce(
+                                    (s, item) => s + item.iznos,
+                                    0
+                                  ) || 0)),
                               0
                             ),
                           0
@@ -364,7 +366,10 @@ const PregledPoDanima = () => {
                                 shifts.reduce(
                                   (sum, shift) =>
                                     sum +
-                                    (shift.kartica?.reduce((s, amount) => s + amount, 0) || 0),
+                                    (shift.kartica?.reduce(
+                                      (s, amount) => s + amount,
+                                      0
+                                    ) || 0),
                                   0
                                 ),
                               0
@@ -377,7 +382,8 @@ const PregledPoDanima = () => {
                               (total, shifts) =>
                                 total +
                                 shifts.reduce(
-                                  (sum, shift) => sum + (shift.plin?.racun || 0),
+                                  (sum, shift) =>
+                                    sum + (shift.plin?.racun || 0),
                                   0
                                 ),
                               0
@@ -392,7 +398,10 @@ const PregledPoDanima = () => {
                                 shifts.reduce(
                                   (sum, shift) =>
                                     sum +
-                                    (shift.benzin?.reduce((s, amount) => s + amount, 0) || 0),
+                                    (shift.benzin?.reduce(
+                                      (s, amount) => s + amount,
+                                      0
+                                    ) || 0),
                                   0
                                 ),
                               0
@@ -407,7 +416,10 @@ const PregledPoDanima = () => {
                                 shifts.reduce(
                                   (sum, shift) =>
                                     sum +
-                                    (shift.troskovi?.reduce((s, item) => s + item.iznos, 0) || 0),
+                                    (shift.troskovi?.reduce(
+                                      (s, item) => s + item.iznos,
+                                      0
+                                    ) || 0),
                                   0
                                 ),
                               0
@@ -422,7 +434,10 @@ const PregledPoDanima = () => {
                                 shifts.reduce(
                                   (sum, shift) =>
                                     sum +
-                                    (shift.prekoRacuna?.reduce((s, item) => s + item.iznos, 0) || 0),
+                                    (shift.prekoRacuna?.reduce(
+                                      (s, item) => s + item.iznos,
+                                      0
+                                    ) || 0),
                                   0
                                 ),
                               0
@@ -438,136 +453,164 @@ const PregledPoDanima = () => {
                               Nedelja: Ponedeljak, {mondayKey}
                             </p>
 
-                            {Object.entries(weekData.users).map(([userName, shifts]) => {
-                              const userWeekTotal = shifts.reduce(
-                                (sum, shift) =>
-                                  sum +
-                                  ((shift.iznosRazlika || 0) -
-                                    (shift.umanjenje?.reduce((s, item) => s + item.iznos, 0) || 0)),
-                                0
-                              );
+                            {Object.entries(weekData.users).map(
+                              ([userName, shifts]) => {
+                                const userWeekTotal = shifts.reduce(
+                                  (sum, shift) =>
+                                    sum +
+                                    ((shift.iznosRazlika || 0) -
+                                      (shift.umanjenje?.reduce(
+                                        (s, item) => s + item.iznos,
+                                        0
+                                      ) || 0)),
+                                  0
+                                );
 
-                              const userCardTotal = isAdmin
-                                ? shifts.reduce(
-                                    (sum, shift) =>
-                                      sum +
-                                      (shift.kartica?.reduce((s, amount) => s + amount, 0) || 0),
-                                    0
-                                  )
-                                : 0;
+                                const userCardTotal = isAdmin
+                                  ? shifts.reduce(
+                                      (sum, shift) =>
+                                        sum +
+                                        (shift.kartica?.reduce(
+                                          (s, amount) => s + amount,
+                                          0
+                                        ) || 0),
+                                      0
+                                    )
+                                  : 0;
 
-                              const userPlinTotal = isAdmin
-                                ? shifts.reduce(
-                                    (sum, shift) => sum + (shift.plin?.racun || 0),
-                                    0
-                                  )
-                                : 0;
+                                const userPlinTotal = isAdmin
+                                  ? shifts.reduce(
+                                      (sum, shift) =>
+                                        sum + (shift.plin?.racun || 0),
+                                      0
+                                    )
+                                  : 0;
 
-                              const userBenzinTotal = isAdmin
-                                ? shifts.reduce(
-                                    (sum, shift) =>
-                                      sum +
-                                      (shift.benzin?.reduce((s, amount) => s + amount, 0) || 0),
-                                    0
-                                  )
-                                : 0;
+                                const userBenzinTotal = isAdmin
+                                  ? shifts.reduce(
+                                      (sum, shift) =>
+                                        sum +
+                                        (shift.benzin?.reduce(
+                                          (s, amount) => s + amount,
+                                          0
+                                        ) || 0),
+                                      0
+                                    )
+                                  : 0;
 
-                              const userTroskoviTotal = isAdmin
-                                ? shifts.reduce(
-                                    (sum, shift) =>
-                                      sum +
-                                      (shift.troskovi?.reduce((s, item) => s + item.iznos, 0) || 0),
-                                    0
-                                  )
-                                : 0;
+                                const userTroskoviTotal = isAdmin
+                                  ? shifts.reduce(
+                                      (sum, shift) =>
+                                        sum +
+                                        (shift.troskovi?.reduce(
+                                          (s, item) => s + item.iznos,
+                                          0
+                                        ) || 0),
+                                      0
+                                    )
+                                  : 0;
 
-                              const userPrekoRacunaTotal = isAdmin
-                                ? shifts.reduce(
-                                    (sum, shift) =>
-                                      sum +
-                                      (shift.prekoRacuna?.reduce((s, item) => s + item.iznos, 0) || 0),
-                                    0
-                                  )
-                                : 0;
+                                const userPrekoRacunaTotal = isAdmin
+                                  ? shifts.reduce(
+                                      (sum, shift) =>
+                                        sum +
+                                        (shift.prekoRacuna?.reduce(
+                                          (s, item) => s + item.iznos,
+                                          0
+                                        ) || 0),
+                                      0
+                                    )
+                                  : 0;
 
-                              return (
-                                <div key={userName} className="mb-3 ml-2">
-                                  <p className="font-semibold text-purple-600 text-sm mb-1">
-                                    {userName}
-                                  </p>
+                                return (
+                                  <div key={userName} className="mb-3 ml-2">
+                                    <p className="font-semibold text-purple-600 text-sm mb-1">
+                                      {userName}
+                                    </p>
 
-                                  {shifts.map((shift) => (
-                                    <div key={shift._id} className="text-xs mb-1 ml-3">
-                                      <p>
-                                        {new Date(shift.createdAt).toLocaleDateString(
-                                          "sr-RS",
-                                          {
+                                    {shifts.map((shift) => (
+                                      <div
+                                        key={shift._id}
+                                        className="text-xs mb-1 ml-3"
+                                      >
+                                        <p>
+                                          {new Date(
+                                            shift.createdAt
+                                          ).toLocaleDateString("sr-RS", {
                                             weekday: "short",
                                             day: "numeric",
                                             month: "short",
                                             timeZone: "Europe/Belgrade",
-                                          }
-                                        )}{" "}
-                                        - <b>
-                                          {shift.iznosRazlika -
-                                            (shift.umanjenje?.reduce((s, item) => s + item.iznos, 0) || 0)}{" "}
-                                          RSD
-                                        </b>
-                                        <span className="text-gray-500 text-xs ml-1">
-                                          (
-                                          {new Date(shift.createdAt).toLocaleTimeString(
-                                            "sr-RS",
-                                            {
+                                          })}{" "}
+                                          -{" "}
+                                          <b>
+                                            {shift.iznosRazlika -
+                                              (shift.umanjenje?.reduce(
+                                                (s, item) => s + item.iznos,
+                                                0
+                                              ) || 0)}{" "}
+                                            RSD
+                                          </b>
+                                          <span className="text-gray-500 text-xs ml-1">
+                                            (
+                                            {new Date(
+                                              shift.createdAt
+                                            ).toLocaleTimeString("sr-RS", {
                                               hour: "2-digit",
                                               minute: "2-digit",
                                               timeZone: "Europe/Belgrade",
-                                            }
-                                          )}
-                                          )
-                                        </span>
+                                            })}
+                                            )
+                                          </span>
+                                        </p>
+                                      </div>
+                                    ))}
+
+                                    <div className="ml-3 mt-1">
+                                      <p className="text-xs text-purple-700 font-semibold">
+                                        {userName} ukupno: {userWeekTotal} RSD
                                       </p>
+                                      {isAdmin && (
+                                        <>
+                                          {userCardTotal > 0 && (
+                                            <p className="text-xs text-blue-600 font-semibold">
+                                              {userName} kartice:{" "}
+                                              {userCardTotal} RSD
+                                            </p>
+                                          )}
+                                          {userPlinTotal > 0 && (
+                                            <p className="text-xs text-green-600 font-semibold">
+                                              {userName} plin: {userPlinTotal}{" "}
+                                              RSD
+                                            </p>
+                                          )}
+                                          {userBenzinTotal > 0 && (
+                                            <p className="text-xs text-orange-600 font-semibold">
+                                              {userName} benzin:{" "}
+                                              {userBenzinTotal} RSD
+                                            </p>
+                                          )}
+                                          {userTroskoviTotal > 0 && (
+                                            <p className="text-xs text-red-600 font-semibold">
+                                              {userName} troškovi:{" "}
+                                              {userTroskoviTotal} RSD
+                                            </p>
+                                          )}
+                                          {userPrekoRacunaTotal > 0 && (
+                                            <p className="text-xs text-indigo-600 font-semibold">
+                                              {userName} preko računa:{" "}
+                                              {userPrekoRacunaTotal} RSD
+                                            </p>
+                                          )}
+                                        </>
+                                      )}
                                     </div>
-                                  ))}
-
-                                  <div className="ml-3 mt-1">
-                                    <p className="text-xs text-purple-700 font-semibold">
-                                      {userName} ukupno: {userWeekTotal} RSD
-                                    </p>
-                                    {isAdmin && (
-                                      <>
-                                        {userCardTotal > 0 && (
-                                          <p className="text-xs text-blue-600 font-semibold">
-                                            {userName} kartice: {userCardTotal} RSD
-                                          </p>
-                                        )}
-                                        {userPlinTotal > 0 && (
-                                          <p className="text-xs text-green-600 font-semibold">
-                                            {userName} plin: {userPlinTotal} RSD
-                                          </p>
-                                        )}
-                                        {userBenzinTotal > 0 && (
-                                          <p className="text-xs text-orange-600 font-semibold">
-                                            {userName} benzin: {userBenzinTotal} RSD
-                                          </p>
-                                        )}
-                                        {userTroskoviTotal > 0 && (
-                                          <p className="text-xs text-red-600 font-semibold">
-                                            {userName} troškovi: {userTroskoviTotal} RSD
-                                          </p>
-                                        )}
-                                        {userPrekoRacunaTotal > 0 && (
-                                          <p className="text-xs text-indigo-600 font-semibold">
-                                            {userName} preko računa: {userPrekoRacunaTotal} RSD
-                                          </p>
-                                        )}
-                                      </>
-                                    )}
                                   </div>
-                                </div>
-                              );
-                            })}
+                                );
+                              }
+                            )}
 
-                            <div className="mt-3 pt-2 border-t-2 border-green-500">
+                            {/* <div className="mt-3 pt-2 border-t-2 border-green-500">
                               <p className="font-bold text-green-700 text-sm">
                                 Nedelja ukupno: {weekTotal} RSD
                               </p>
@@ -600,7 +643,7 @@ const PregledPoDanima = () => {
                                   )}
                                 </>
                               )}
-                            </div>
+                            </div> */}
                           </div>
                         );
                       })}
@@ -634,14 +677,16 @@ const PregledPoDanima = () => {
                         )}
                         {monthPrekoRacunaTotal > 0 && (
                           <p className="font-bold text-lg text-indigo-600 text-center">
-                            {monthYear} PREKO RAČUNA: {monthPrekoRacunaTotal} RSD
+                            {monthYear} PREKO RAČUNA: {monthPrekoRacunaTotal}{" "}
+                            RSD
                           </p>
                         )}
 
                         {/* Sekcija za izračun (Ukupno - troškovi) */}
                         <div className="mt-4 pt-4 border-t-2 border-gray-400">
                           {(() => {
-                            const totalMultipliedUsers = getTotalMultipliedAmountsForMonth(monthYear);
+                            const totalMultipliedUsers =
+                              getTotalMultipliedAmountsForMonth(monthYear);
                             const netoAmount =
                               monthTotal -
                               monthPlinTotal -
@@ -654,18 +699,22 @@ const PregledPoDanima = () => {
                                 {/* Prikaži iznos korisnika sa množiocem */}
                                 {totalMultipliedUsers > 0 && (
                                   <p className="font-bold text-lg text-pink-700 text-center mb-2">
-                                    {monthYear} KORISNICI (sa množiocem): {totalMultipliedUsers.toFixed(2)} RSD
+                                    {monthYear} KORISNICI (sa množiocem):{" "}
+                                    {totalMultipliedUsers.toFixed(2)} RSD
                                   </p>
                                 )}
 
                                 <p className="font-bold text-lg text-purple-800 text-center">
-                                  {monthYear} NETO (Ukupno - Plin - Benzin - Troškovi - Korisnici):{" "}
-                                  {netoAmount.toFixed(2)} RSD
+                                  {monthYear} NETO (Ukupno - Plin - Benzin -
+                                  Troškovi - Korisnici): {netoAmount.toFixed(2)}{" "}
+                                  RSD
                                 </p>
 
                                 {/* Input za custom iznos */}
                                 <div className="flex items-center justify-center gap-2 mt-3">
-                                  <label className="font-semibold">Oduzmi dodatni iznos:</label>
+                                  <label className="font-semibold">
+                                    Oduzmi dodatni iznos:
+                                  </label>
                                   <input
                                     type="number"
                                     placeholder="0"
@@ -682,12 +731,19 @@ const PregledPoDanima = () => {
                                 </div>
 
                                 {/* Finalni iznos */}
-                                {customAmounts[monthYear] && parseFloat(customAmounts[monthYear]) > 0 && (
-                                  <p className="font-bold text-xl text-green-800 text-center mt-3 bg-green-100 py-2 rounded">
-                                    {monthYear} FINALNO:{" "}
-                                    {(netoAmount - parseFloat(customAmounts[monthYear] || 0)).toFixed(2)} RSD
-                                  </p>
-                                )}
+                                {customAmounts[monthYear] &&
+                                  parseFloat(customAmounts[monthYear]) > 0 && (
+                                    <p className="font-bold text-xl text-green-800 text-center mt-3 bg-green-100 py-2 rounded">
+                                      {monthYear} FINALNO:{" "}
+                                      {(
+                                        netoAmount -
+                                        parseFloat(
+                                          customAmounts[monthYear] || 0
+                                        )
+                                      ).toFixed(2)}{" "}
+                                      RSD
+                                    </p>
+                                  )}
                               </>
                             );
                           })()}
@@ -704,7 +760,9 @@ const PregledPoDanima = () => {
       {/* Sekcija za množioce (samo za admina) */}
       {isAdmin && users.length > 0 && (
         <div className="mt-10 border-t-4 border-purple-600 pt-6">
-          <h2 className="text-xl font-bold mb-4 text-purple-800">Pregled po korisniku - Množioci</h2>
+          <h2 className="text-xl font-bold mb-4 text-purple-800">
+            Pregled po korisniku - Množioci
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {users.map((user) => {
               const userTotal = getUserTotalAmount(user.name);
@@ -712,8 +770,13 @@ const PregledPoDanima = () => {
               const calculatedAmount = userTotal * multiplier;
 
               return (
-                <div key={user._id} className="border-2 border-purple-300 p-4 rounded-lg bg-purple-50">
-                  <h3 className="font-bold text-lg text-purple-700 mb-2">{user.name}</h3>
+                <div
+                  key={user._id}
+                  className="border-2 border-purple-300 p-4 rounded-lg bg-purple-50"
+                >
+                  <h3 className="font-bold text-lg text-purple-700 mb-2">
+                    {user.name}
+                  </h3>
                   <p className="text-sm mb-1">
                     <strong>Ukupan iznos:</strong> {userTotal.toFixed(2)} RSD
                   </p>
@@ -731,8 +794,13 @@ const PregledPoDanima = () => {
                         />
                         <button
                           onClick={() => {
-                            const newValue = document.getElementById(`multiplier-${user._id}`).value;
-                            const userId = typeof user._id === 'string' ? user._id : user._id.toString();
+                            const newValue = document.getElementById(
+                              `multiplier-${user._id}`
+                            ).value;
+                            const userId =
+                              typeof user._id === "string"
+                                ? user._id
+                                : user._id.toString();
                             handleMultiplierChange(userId, newValue);
                           }}
                           className="bg-green-600 text-white px-2 py-1 rounded text-sm"
@@ -741,7 +809,10 @@ const PregledPoDanima = () => {
                         </button>
                         <button
                           onClick={() =>
-                            setEditingMultiplier((prev) => ({ ...prev, [user._id]: false }))
+                            setEditingMultiplier((prev) => ({
+                              ...prev,
+                              [user._id]: false,
+                            }))
                           }
                           className="bg-gray-400 text-white px-2 py-1 rounded text-sm"
                         >
@@ -750,10 +821,15 @@ const PregledPoDanima = () => {
                       </>
                     ) : (
                       <>
-                        <span className="font-bold text-purple-600">{multiplier}</span>
+                        <span className="font-bold text-purple-600">
+                          {multiplier}
+                        </span>
                         <button
                           onClick={() =>
-                            setEditingMultiplier((prev) => ({ ...prev, [user._id]: true }))
+                            setEditingMultiplier((prev) => ({
+                              ...prev,
+                              [user._id]: true,
+                            }))
                           }
                           className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
                         >

@@ -5,6 +5,7 @@ import {
   DeleteEndShift,
   DeleteAnyEndShift,
   UpdateEndShift,
+  ToggleCheckEndShift,
 } from "@/lib/actions/endshift.action";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ const Pregled = () => {
   const [deletedIds, setDeletedIds] = useState(new Set());
   const [editingShift, setEditingShift] = useState(null);
   const [editFormData, setEditFormData] = useState({});
+  const [checkingInProgress, setCheckingInProgress] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,6 +170,44 @@ const Pregled = () => {
     }
   };
 
+  // Funkcija za čekiranje/rasčekiranje kartice
+  const handleToggleCheck = async (e, recordId, currentStatus) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (checkingInProgress) {
+      e.target.checked = currentStatus;
+      return;
+    }
+
+    const action = currentStatus ? "rasčekirate" : "čekirate";
+
+    if (!confirm(`Da li ste sigurni da želite da ${action} ovu karticu?`)) {
+      e.target.checked = currentStatus; // Vrati checkbox na prethodno stanje
+      return;
+    }
+
+    setCheckingInProgress(true);
+
+    try {
+      await ToggleCheckEndShift(recordId, !currentStatus);
+
+      // Ažuriraj state umesto reload
+      setResult((prevResult) =>
+        prevResult.map((shift) =>
+          shift._id === recordId
+            ? { ...shift, isChecked: !currentStatus }
+            : shift
+        )
+      );
+    } catch (error) {
+      alert(error.message || "Greška pri ažuriranju statusa kartice");
+      e.target.checked = currentStatus; // Vrati checkbox na prethodno stanje u slučaju greške
+    } finally {
+      setCheckingInProgress(false);
+    }
+  };
+
   if (loading) {
     return <div className="container px-4 mt-20 mx-auto">Učitavanje...</div>;
   }
@@ -185,7 +225,25 @@ const Pregled = () => {
             isLastRecord && shift.userId === session?.user?.id;
 
           return (
-            <div key={shift._id} className="border-2 p-5 m-2 relative">
+            <div
+              key={shift._id}
+              className={`border-2 p-5 m-2 relative transition-colors ${
+                shift.isChecked ? 'bg-gray-100' : 'bg-white'
+              }`}
+            >
+              {/* Checkbox za čekiranje (samo za admina) */}
+              {session?.user?.role === "admin" && (
+                <div className="absolute top-2 left-2">
+                  <input
+                    type="checkbox"
+                    checked={shift.isChecked || false}
+                    onChange={(e) => handleToggleCheck(e, shift._id, shift.isChecked)}
+                    disabled={checkingInProgress}
+                    className="w-5 h-5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    title={shift.isChecked ? "Rasčekiraj karticu" : "Čekiraj karticu"}
+                  />
+                </div>
+              )}
               <p className="font-bold text-purple-600 text-lg mb-2">
                 {shift.user?.name || "Nepoznat korisnik"}
               </p>

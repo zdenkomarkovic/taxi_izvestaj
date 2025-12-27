@@ -40,6 +40,7 @@ const StopSchema = new Schema(
       },
     ],
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+    isChecked: { type: Boolean, default: false },
   },
   { timestamps: true }
 );
