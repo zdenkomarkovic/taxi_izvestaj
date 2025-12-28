@@ -21,6 +21,7 @@ const PregledPoDanima = () => {
   const [editingMultiplier, setEditingMultiplier] = useState({});
   const [customAmounts, setCustomAmounts] = useState({}); // Čuva custom iznose po mesecu
   const [napomenaInputs, setNapomenaInputs] = useState({}); // Čuva tekst napomene za svakog korisnika
+  const [allShiftsSorted, setAllShiftsSorted] = useState([]); // Svi shift-ovi sortirani po datumu
 
   useEffect(() => {
     const fetchData = async () => {
@@ -91,6 +92,13 @@ const PregledPoDanima = () => {
       });
 
       setGroupedData(grouped);
+
+      // Sortiraj sve shift-ove po datumu (najstariji -> najnoviji) za izračunavanje kilometraže
+      const sortedShifts = [...data].sort(
+        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
+      );
+      setAllShiftsSorted(sortedShifts);
+
       setLoading(false);
     };
 
@@ -98,6 +106,29 @@ const PregledPoDanima = () => {
       fetchData();
     }
   }, [session]);
+
+  // Funkcija koja vraća pređenu kilometražu za sipanje plina
+  const getPredjenoKm = (currentShift) => {
+    const currentKm = currentShift.plin?.kilometraza || 0;
+    if (currentKm === 0) return 0;
+
+    // Pronađi prethodni shift sa sipanjem plina (kronološki pre ovog)
+    const currentIndex = allShiftsSorted.findIndex(
+      (s) => s._id === currentShift._id
+    );
+
+    if (currentIndex <= 0) return 0; // Nema prethodnog
+
+    // Traži unazad prvi shift koji ima sipanje plina
+    for (let i = currentIndex - 1; i >= 0; i--) {
+      const prevKm = allShiftsSorted[i].plin?.kilometraza || 0;
+      if (prevKm > 0) {
+        return currentKm - prevKm;
+      }
+    }
+
+    return 0; // Nema prethodnog sipanja
+  };
 
   if (loading) {
     return <div className="container px-4 mt-20 mx-auto">Učitavanje...</div>;
@@ -548,16 +579,35 @@ const PregledPoDanima = () => {
                   }, 0)
                 : 0;
 
+              // Potrošnja za ovaj mesec
+              const monthPotrosnja = [];
+              Object.values(weeks).forEach((week) => {
+                Object.values(week.users).forEach((shifts) => {
+                  shifts.forEach((shift) => {
+                    const plinRacun = shift.plin?.racun || 0;
+                    const predjenoKm = getPredjenoKm(shift);
+                    if (plinRacun > 0 && predjenoKm > 0) {
+                      monthPotrosnja.push({
+                        date: shift.createdAt,
+                        potrosnja: (plinRacun / predjenoKm) * 100,
+                      });
+                    }
+                  });
+                });
+              });
+
               return (
                 <div
                   key={monthYear}
-                  className="border-2 p-4 bg-white shadow-lg min-w-[600px] flex-shrink-0"
+                  className="border-2 p-4 bg-white shadow-lg min-w-[800px] flex-shrink-0"
                 >
                   <h2 className="text-xl font-bold mb-4 text-blue-500 text-center border-b-2 pb-2">
                     {monthYear}
                   </h2>
 
-                  <div className="space-y-6">
+                  <div className="flex gap-4">
+                    {/* Leva strana - korisnici i iznosi */}
+                    <div className="flex-1 space-y-6">
                     {Object.entries(weeks)
                       .sort(([, weekA], [, weekB]) => {
                         return weekB.mondayDate - weekA.mondayDate;
@@ -871,6 +921,47 @@ const PregledPoDanima = () => {
                           </div>
                         );
                       })}
+                    </div>
+
+                    {/* Desna strana - potrošnja (samo za admina) */}
+                    {isAdmin && monthPotrosnja.length > 0 && (
+                      <div className="w-80 border-l-2 border-teal-300 pl-4">
+                        <h3 className="text-lg font-bold text-teal-700 mb-3 text-center">
+                          📊 Potrošnja
+                        </h3>
+                        <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                          {monthPotrosnja
+                            .sort((a, b) => new Date(b.date) - new Date(a.date))
+                            .map((item, idx) => (
+                              <div
+                                key={idx}
+                                className="flex justify-between items-center text-sm bg-teal-50 p-2 rounded"
+                              >
+                                <span className="text-gray-700">
+                                  {new Date(item.date).toLocaleDateString("sr-RS", {
+                                    day: "numeric",
+                                    month: "short",
+                                  })}
+                                </span>
+                                <span className="font-bold text-teal-800">
+                                  {item.potrosnja.toFixed(2)} RSD/100km
+                                </span>
+                              </div>
+                            ))}
+                        </div>
+                        {/* Prosečna potrošnja za mesec */}
+                        <div className="mt-3 pt-3 border-t-2 border-teal-400">
+                          <p className="text-sm font-bold text-teal-900 text-center">
+                            Prosečno:{" "}
+                            {(
+                              monthPotrosnja.reduce((sum, item) => sum + item.potrosnja, 0) /
+                              monthPotrosnja.length
+                            ).toFixed(2)}{" "}
+                            RSD/100km
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <div className="mt-4 pt-4 border-t-4 border-blue-600 bg-blue-50">
