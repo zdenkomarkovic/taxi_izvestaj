@@ -6,6 +6,12 @@ const UserSchema = new Schema(
     password: { type: String, required: true },
     role: { type: String, enum: ["admin", "user"], default: "user" },
     multiplier: { type: Number, default: 1 },
+    napomene: [
+      {
+        tekst: { type: String, required: true },
+        createdAt: { type: Date, default: Date.now },
+      },
+    ],
   },
   { timestamps: true }
 );
