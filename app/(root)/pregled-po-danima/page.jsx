@@ -272,8 +272,8 @@ const PregledPoDanima = () => {
   };
 
   return (
-    <div className="container px-4 mt-20 mx-auto">
-      <h1 className="text-2xl font-bold mb-6">
+    <div className="container px-2 sm:px-4 mt-20 mx-auto max-w-7xl">
+      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
         Pregled iznosa razlike po mesecima
       </h1>
 
@@ -282,36 +282,38 @@ const PregledPoDanima = () => {
       ) : (
         <>
           {/* Kontrole za navigaciju između meseci */}
-          <div className="mb-6 flex items-center justify-center gap-4">
-            <button
-              onClick={goToPreviousMonth}
-              disabled={currentIndex >= availableMonths.length - 1}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            >
-              ← Prethodni mesec
-            </button>
-
-            <div className="text-xl font-bold text-blue-800">
+          <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+            <div className="text-lg sm:text-xl font-bold text-blue-800 order-1 sm:order-2 mb-2 sm:mb-0">
               {selectedMonth}
             </div>
 
-            <button
-              onClick={goToNextMonth}
-              disabled={currentIndex <= 0}
-              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
-            >
-              Sledeći mesec →
-            </button>
+            <div className="flex gap-2 w-full sm:w-auto order-2 sm:order-none">
+              <button
+                onClick={goToPreviousMonth}
+                disabled={currentIndex >= availableMonths.length - 1}
+                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                ← Prethodni
+              </button>
+
+              <button
+                onClick={goToNextMonth}
+                disabled={currentIndex <= 0}
+                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-sm sm:text-base bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+              >
+                Sledeći →
+              </button>
+            </div>
           </div>
 
-          <div className="flex gap-6 overflow-x-auto pb-4">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 pb-4">
           {/* Sekcija za množioce (samo za admina) - uvek prikaži prvo */}
           {isAdmin && users.length > 0 && (
-            <div className="border-2 border-purple-600 p-4 bg-purple-50 shadow-lg min-w-[400px] max-w-[400px] flex-shrink-0">
-              <h2 className="text-xl font-bold mb-4 text-purple-800 text-center border-b-2 border-purple-600 pb-2">
+            <div className="border-2 border-purple-600 p-3 sm:p-4 bg-purple-50 shadow-lg w-full lg:min-w-[400px] lg:max-w-[400px] flex-shrink-0">
+              <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-purple-800 text-center border-b-2 border-purple-600 pb-2">
                 Pregled po korisniku - Množioci
               </h2>
-              <div className="space-y-3 max-h-[800px] overflow-y-auto pr-2">
+              <div className="space-y-3 max-h-[600px] lg:max-h-[800px] overflow-y-auto pr-2">
                 {users.map((user) => {
                   const userTotal = getUserTotalAmount(user.name);
                   const multiplier = user.multiplier || 1;
@@ -320,18 +322,18 @@ const PregledPoDanima = () => {
                   return (
                     <div
                       key={user._id}
-                      className="border-2 border-purple-300 p-3 rounded-lg bg-white"
+                      className="border-2 border-purple-300 p-2 sm:p-3 rounded-lg bg-white"
                     >
-                      <h3 className="font-bold text-base text-purple-700 mb-2">
+                      <h3 className="font-bold text-sm sm:text-base text-purple-700 mb-2">
                         {user.name}
                       </h3>
-                      <p className="text-sm mb-1">
+                      <p className="text-xs sm:text-sm mb-1">
                         <strong>Ukupan iznos:</strong> {userTotal.toFixed(2)}{" "}
                         RSD
                       </p>
 
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <label className="text-sm font-semibold">
+                        <label className="text-xs sm:text-sm font-semibold">
                           Množilac:
                         </label>
                         {editingMultiplier[user._id] ? (
@@ -340,7 +342,7 @@ const PregledPoDanima = () => {
                               type="number"
                               step="0.01"
                               defaultValue={multiplier}
-                              className="border rounded px-2 py-1 w-20"
+                              className="border rounded px-2 py-1 w-16 sm:w-20 text-xs sm:text-sm"
                               id={`multiplier-${user._id}`}
                             />
                             <button
@@ -354,7 +356,7 @@ const PregledPoDanima = () => {
                                     : user._id.toString();
                                 handleMultiplierChange(userId, newValue);
                               }}
-                              className="bg-green-600 text-white px-2 py-1 rounded text-sm"
+                              className="bg-green-600 text-white px-2 py-1 rounded text-xs sm:text-sm"
                             >
                               Sačuvaj
                             </button>
@@ -365,14 +367,14 @@ const PregledPoDanima = () => {
                                   [user._id]: false,
                                 }))
                               }
-                              className="bg-gray-400 text-white px-2 py-1 rounded text-sm"
+                              className="bg-gray-400 text-white px-2 py-1 rounded text-xs sm:text-sm"
                             >
                               Otkaži
                             </button>
                           </>
                         ) : (
                           <>
-                            <span className="font-bold text-purple-600">
+                            <span className="font-bold text-purple-600 text-sm sm:text-base">
                               {multiplier}
                             </span>
                             <button
@@ -382,7 +384,7 @@ const PregledPoDanima = () => {
                                   [user._id]: true,
                                 }))
                               }
-                              className="bg-blue-600 text-white px-2 py-1 rounded text-sm"
+                              className="bg-blue-600 text-white px-2 py-1 rounded text-xs sm:text-sm"
                             >
                               Izmeni
                             </button>
@@ -390,13 +392,13 @@ const PregledPoDanima = () => {
                         )}
                       </div>
 
-                      <p className="text-base font-bold text-purple-800 mt-2">
+                      <p className="text-sm sm:text-base font-bold text-purple-800 mt-2">
                         Izračunato: {calculatedAmount.toFixed(2)} RSD
                       </p>
 
                       {/* Napomene sekcija */}
-                      <div className="mt-4 pt-3 border-t-2 border-purple-300">
-                        <h4 className="text-sm font-bold text-purple-700 mb-2">
+                      <div className="mt-3 sm:mt-4 pt-2 sm:pt-3 border-t-2 border-purple-300">
+                        <h4 className="text-xs sm:text-sm font-bold text-purple-700 mb-2">
                           Napomene:
                         </h4>
 
@@ -417,11 +419,11 @@ const PregledPoDanima = () => {
                                 handleAddNapomena(user._id);
                               }
                             }}
-                            className="flex-1 border rounded px-2 py-1 text-sm"
+                            className="flex-1 border rounded px-2 py-1 text-xs sm:text-sm"
                           />
                           <button
                             onClick={() => handleAddNapomena(user._id)}
-                            className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                            className="bg-green-600 text-white px-2 sm:px-3 py-1 rounded text-xs sm:text-sm hover:bg-green-700"
                           >
                             Dodaj
                           </button>
@@ -435,8 +437,8 @@ const PregledPoDanima = () => {
                                 key={napomena._id}
                                 className="bg-yellow-50 border border-yellow-200 rounded p-2 flex justify-between items-start gap-2"
                               >
-                                <div className="flex-1">
-                                  <p className="text-sm text-gray-800">
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs sm:text-sm text-gray-800 break-words">
                                     {napomena.tekst}
                                   </p>
                                   <p className="text-xs text-gray-500 mt-1">
@@ -455,10 +457,10 @@ const PregledPoDanima = () => {
                                   onClick={() =>
                                     handleDeleteNapomena(user._id, napomena._id)
                                   }
-                                  className="text-red-600 hover:text-red-800 p-1"
+                                  className="text-red-600 hover:text-red-800 p-1 flex-shrink-0"
                                   title="Obriši napomenu"
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                                 </button>
                               </div>
                             ))}
@@ -596,16 +598,16 @@ const PregledPoDanima = () => {
             return (
                 <div
                   key={monthYear}
-                  className="border-2 p-4 bg-white shadow-lg min-w-[800px] flex-shrink-0"
+                  className="border-2 p-3 sm:p-4 bg-white shadow-lg w-full flex-shrink-0"
                 >
-                  <h2 className="text-xl font-bold mb-4 text-blue-500 text-center border-b-2 pb-2">
+                  <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 text-blue-500 text-center border-b-2 pb-2">
                     {monthYear}
                   </h2>
 
-                  <div className="flex gap-4">
+                  <div className="flex flex-col lg:flex-row gap-4">
                     {/* Leva strana - korisnici i iznosi */}
                     <div className="flex-1">
-                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                         {Object.entries(monthData.users).map(
                           ([userName, shifts]) => {
                             const userMonthTotal = shifts.reduce(
@@ -677,9 +679,9 @@ const PregledPoDanima = () => {
                             return (
                               <div
                                 key={userName}
-                                className="border-2 border-purple-200 p-3 rounded-lg bg-white"
+                                className="border-2 border-purple-200 p-2 sm:p-3 rounded-lg bg-white"
                               >
-                                <p className="font-semibold text-purple-600 text-sm mb-2">
+                                <p className="font-semibold text-purple-600 text-xs sm:text-sm mb-2">
                                   {userName}
                                 </p>
 
@@ -715,9 +717,9 @@ const PregledPoDanima = () => {
                                     return (
                                       <div
                                         key={shift._id}
-                                        className={`text-xs mb-1 ${addSpacing ? 'mt-3 pt-3 border-t border-gray-300' : ''}`}
+                                        className={`text-[10px] sm:text-xs mb-1 ${addSpacing ? 'mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-gray-300' : ''}`}
                                       >
-                                        <p>
+                                        <p className="break-words">
                                           {new Date(
                                             shift.createdAt
                                           ).toLocaleDateString("sr-RS", {
@@ -735,7 +737,7 @@ const PregledPoDanima = () => {
                                               ) || 0)}{" "}
                                             RSD
                                           </b>
-                                          <span className="text-gray-500 text-xs ml-1">
+                                          <span className="text-gray-500 text-[10px] sm:text-xs ml-1">
                                             (
                                             {new Date(
                                               shift.createdAt
@@ -752,33 +754,33 @@ const PregledPoDanima = () => {
                                   })}
 
                                 <div className="mt-2 pt-2 border-t border-purple-200">
-                                  <p className="text-xs text-purple-700 font-semibold">
+                                  <p className="text-[10px] sm:text-xs text-purple-700 font-semibold">
                                     Ukupno: {userMonthTotal} RSD
                                   </p>
                                   {isAdmin && (
                                     <>
                                       {userCardTotal > 0 && (
-                                        <p className="text-xs text-blue-600 font-semibold">
+                                        <p className="text-[10px] sm:text-xs text-blue-600 font-semibold">
                                           Kartice: {userCardTotal} RSD
                                         </p>
                                       )}
                                       {userPlinTotal > 0 && (
-                                        <p className="text-xs text-green-600 font-semibold">
+                                        <p className="text-[10px] sm:text-xs text-green-600 font-semibold">
                                           Plin: {userPlinTotal} RSD
                                         </p>
                                       )}
                                       {userBenzinTotal > 0 && (
-                                        <p className="text-xs text-orange-600 font-semibold">
+                                        <p className="text-[10px] sm:text-xs text-orange-600 font-semibold">
                                           Benzin: {userBenzinTotal} RSD
                                         </p>
                                       )}
                                       {userTroskoviTotal > 0 && (
-                                        <p className="text-xs text-red-600 font-semibold">
+                                        <p className="text-[10px] sm:text-xs text-red-600 font-semibold">
                                           Troškovi: {userTroskoviTotal} RSD
                                         </p>
                                       )}
                                       {userPrekoRacunaTotal > 0 && (
-                                        <p className="text-xs text-indigo-600 font-semibold">
+                                        <p className="text-[10px] sm:text-xs text-indigo-600 font-semibold">
                                           Preko računa: {userPrekoRacunaTotal}{" "}
                                           RSD
                                         </p>
@@ -795,17 +797,17 @@ const PregledPoDanima = () => {
 
                     {/* Desna strana - potrošnja (samo za admina) */}
                     {isAdmin && monthPotrosnja.length > 0 && (
-                      <div className="w-80 border-l-2 border-teal-300 pl-4">
-                        <h3 className="text-lg font-bold text-teal-700 mb-3 text-center">
+                      <div className="w-full lg:w-80 border-t-2 lg:border-t-0 lg:border-l-2 border-teal-300 pt-4 lg:pt-0 lg:pl-4">
+                        <h3 className="text-base sm:text-lg font-bold text-teal-700 mb-3 text-center">
                           📊 Potrošnja
                         </h3>
-                        <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                        <div className="space-y-2 max-h-[400px] sm:max-h-[600px] overflow-y-auto">
                           {monthPotrosnja
                             .sort((a, b) => new Date(b.date) - new Date(a.date))
                             .map((item, idx) => (
                               <div
                                 key={idx}
-                                className="flex justify-between items-center text-sm bg-teal-50 p-2 rounded"
+                                className="flex justify-between items-center text-xs sm:text-sm bg-teal-50 p-2 rounded"
                               >
                                 <span className="text-gray-700">
                                   {new Date(item.date).toLocaleDateString("sr-RS", {
@@ -821,7 +823,7 @@ const PregledPoDanima = () => {
                         </div>
                         {/* Prosečna potrošnja za mesec */}
                         <div className="mt-3 pt-3 border-t-2 border-teal-400">
-                          <p className="text-sm font-bold text-teal-900 text-center">
+                          <p className="text-xs sm:text-sm font-bold text-teal-900 text-center">
                             Prosečno:{" "}
                             {(
                               monthPotrosnja.reduce((sum, item) => sum + item.potrosnja, 0) /
@@ -834,41 +836,41 @@ const PregledPoDanima = () => {
                     )}
                   </div>
 
-                  <div className="mt-4 pt-4 border-t-4 border-blue-600 bg-blue-50">
-                    <p className="font-bold text-lg text-blue-800 text-center">
+                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t-4 border-blue-600 bg-blue-50 p-2 sm:p-3">
+                    <p className="font-bold text-base sm:text-lg text-blue-800 text-center">
                       {monthYear} UKUPNO: {monthTotal} RSD
                     </p>
                     {isAdmin && (
                       <>
                         {monthCardTotal > 0 && (
-                          <p className="font-bold text-lg text-blue-600 text-center">
+                          <p className="font-bold text-sm sm:text-lg text-blue-600 text-center">
                             {monthYear} KARTICE: {monthCardTotal} RSD
                           </p>
                         )}
                         {monthPlinTotal > 0 && (
-                          <p className="font-bold text-lg text-green-600 text-center">
+                          <p className="font-bold text-sm sm:text-lg text-green-600 text-center">
                             {monthYear} PLIN: {monthPlinTotal} RSD
                           </p>
                         )}
                         {monthBenzinTotal > 0 && (
-                          <p className="font-bold text-lg text-orange-600 text-center">
+                          <p className="font-bold text-sm sm:text-lg text-orange-600 text-center">
                             {monthYear} BENZIN: {monthBenzinTotal} RSD
                           </p>
                         )}
                         {monthTroskoviTotal > 0 && (
-                          <p className="font-bold text-lg text-red-600 text-center">
+                          <p className="font-bold text-sm sm:text-lg text-red-600 text-center">
                             {monthYear} TROŠKOVI: {monthTroskoviTotal} RSD
                           </p>
                         )}
                         {monthPrekoRacunaTotal > 0 && (
-                          <p className="font-bold text-lg text-indigo-600 text-center">
+                          <p className="font-bold text-sm sm:text-lg text-indigo-600 text-center">
                             {monthYear} PREKO RAČUNA: {monthPrekoRacunaTotal}{" "}
                             RSD
                           </p>
                         )}
 
                         {/* Sekcija za izračun (Ukupno - troškovi) */}
-                        <div className="mt-4 pt-4 border-t-2 border-gray-400">
+                        <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t-2 border-gray-400">
                           {(() => {
                             const totalMultipliedUsers =
                               getTotalMultipliedAmountsForMonth(monthYear);
@@ -883,42 +885,44 @@ const PregledPoDanima = () => {
                               <>
                                 {/* Prikaži iznos korisnika sa množiocem */}
                                 {totalMultipliedUsers > 0 && (
-                                  <p className="font-bold text-lg text-pink-700 text-center mb-2">
+                                  <p className="font-bold text-sm sm:text-lg text-pink-700 text-center mb-2">
                                     {monthYear} KORISNICI (sa množiocem):{" "}
                                     {totalMultipliedUsers.toFixed(2)} RSD
                                   </p>
                                 )}
 
-                                <p className="font-bold text-lg text-purple-800 text-center">
+                                <p className="font-bold text-sm sm:text-lg text-purple-800 text-center">
                                   {monthYear} NETO (Ukupno - Plin - Benzin -
                                   Troškovi - Korisnici): {netoAmount.toFixed(2)}{" "}
                                   RSD
                                 </p>
 
                                 {/* Input za custom iznos */}
-                                <div className="flex items-center justify-center gap-2 mt-3">
-                                  <label className="font-semibold">
+                                <div className="flex flex-col sm:flex-row items-center justify-center gap-2 mt-3">
+                                  <label className="font-semibold text-sm sm:text-base">
                                     Oduzmi dodatni iznos:
                                   </label>
-                                  <input
-                                    type="number"
-                                    placeholder="0"
-                                    value={customAmounts[monthYear] || ""}
-                                    onChange={(e) =>
-                                      setCustomAmounts((prev) => ({
-                                        ...prev,
-                                        [monthYear]: e.target.value,
-                                      }))
-                                    }
-                                    className="border rounded px-3 py-1 w-32"
-                                  />
-                                  <span className="font-semibold">RSD</span>
+                                  <div className="flex items-center gap-2">
+                                    <input
+                                      type="number"
+                                      placeholder="0"
+                                      value={customAmounts[monthYear] || ""}
+                                      onChange={(e) =>
+                                        setCustomAmounts((prev) => ({
+                                          ...prev,
+                                          [monthYear]: e.target.value,
+                                        }))
+                                      }
+                                      className="border rounded px-2 sm:px-3 py-1 w-24 sm:w-32 text-sm sm:text-base"
+                                    />
+                                    <span className="font-semibold text-sm sm:text-base">RSD</span>
+                                  </div>
                                 </div>
 
                                 {/* Finalni iznos */}
                                 {customAmounts[monthYear] &&
                                   parseFloat(customAmounts[monthYear]) > 0 && (
-                                    <p className="font-bold text-xl text-green-800 text-center mt-3 bg-green-100 py-2 rounded">
+                                    <p className="font-bold text-lg sm:text-xl text-green-800 text-center mt-3 bg-green-100 py-2 rounded">
                                       {monthYear} FINALNO:{" "}
                                       {(
                                         netoAmount -
