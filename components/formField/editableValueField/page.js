@@ -72,7 +72,7 @@ const EditableValueField = ({ name, label, control, defaultValue }) => {
                   <Button
                     type="button"
                     onClick={() => setIsEditing(false)}
-                    className="bg-green-600 hover:bg-green-800 text-white p-2"
+                    className="bg-green-600 hover:bg-green-700 text-white p-2"
                     title="Potvrdi"
                   >
                     <Check className="w-5 h-5" />
