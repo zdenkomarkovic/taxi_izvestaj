@@ -7,6 +7,11 @@ import {
   addUserNapomena,
   deleteUserNapomena,
 } from "@/lib/actions/user.action";
+import {
+  addZamenaUlja,
+  getZameneUlja,
+  deleteZamenaUlja,
+} from "@/lib/actions/zamenaUlja.action";
 import { useSession } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -21,6 +26,9 @@ const PregledPoDanima = () => {
   const [editingMultiplier, setEditingMultiplier] = useState({});
   const [customAmounts, setCustomAmounts] = useState({}); // Čuva custom iznose po mesecu
   const [napomenaInputs, setNapomenaInputs] = useState({}); // Čuva tekst napomene za svakog korisnika
+  const [zamenaUljaKilometraza, setZamenaUljaKilometraza] = useState(""); // Kilometraža za zamenu ulja
+  const [zameneUlja, setZameneUlja] = useState([]); // Lista svih zamena ulja
+  const [showZameneUlja, setShowZameneUlja] = useState(false); // Prikaz/sakrivanje istorije
   const [allShiftsSorted, setAllShiftsSorted] = useState([]); // Svi shift-ovi sortirani po datumu
   const [selectedMonth, setSelectedMonth] = useState(null); // Odabrani mesec za prikaz
 
@@ -38,6 +46,10 @@ const PregledPoDanima = () => {
         const allUsers = await getUsers();
         console.log("Loaded users:", allUsers);
         setUsers(allUsers);
+
+        // Učitaj zamene ulja
+        const zamene = await getZameneUlja();
+        setZameneUlja(zamene);
       }
 
       // Grupisanje po mesecu i korisniku
@@ -250,6 +262,53 @@ const PregledPoDanima = () => {
     }
   };
 
+  // Dodaj zamenu ulja
+  const handleAddZamenaUlja = async () => {
+    if (!zamenaUljaKilometraza || zamenaUljaKilometraza.trim() === "") {
+      alert("Unesite kilometražu!");
+      return;
+    }
+
+    if (isNaN(zamenaUljaKilometraza)) {
+      alert("Kilometraža mora biti broj!");
+      return;
+    }
+
+    try {
+      await addZamenaUlja(parseFloat(zamenaUljaKilometraza));
+
+      // Ponovo učitaj zamene ulja
+      const zamene = await getZameneUlja();
+      setZameneUlja(zamene);
+
+      // Očisti input
+      setZamenaUljaKilometraza("");
+
+      alert("Zamena ulja uspešno dodata!");
+    } catch (error) {
+      alert("Greška pri dodavanju zamene ulja: " + (error?.message || error));
+    }
+  };
+
+  // Obriši zamenu ulja
+  const handleDeleteZamenaUlja = async (zamenaId) => {
+    if (!confirm("Da li ste sigurni da želite da obrišete ovaj zapis?")) {
+      return;
+    }
+
+    try {
+      await deleteZamenaUlja(zamenaId);
+
+      // Ponovo učitaj zamene ulja
+      const zamene = await getZameneUlja();
+      setZameneUlja(zamene);
+
+      alert("Zapis uspešno obrisan!");
+    } catch (error) {
+      alert("Greška pri brisanju zapisa: " + (error?.message || error));
+    }
+  };
+
   // Dobij sortirane mesece (najnoviji prvo)
   const availableMonths = Object.keys(groupedData).sort((a, b) => {
     return new Date(b) - new Date(a);
@@ -273,9 +332,127 @@ const PregledPoDanima = () => {
 
   return (
     <div className="container px-2 sm:px-4 mt-20 mx-auto max-w-7xl">
-      <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
-        Pregled iznosa razlike po mesecima
+      <h1 className="text-xl sm:text-2xl font-bold mb-2">
+        Zamena ulja i kilometraža
       </h1>
+
+      {/* Kompaktna sekcija za unos zamene ulja */}
+      {isAdmin && (() => {
+        // Proveri da li bilo koja smena ima kmSat veći od sledeće zamene
+        const sledecaZamenaKm = zameneUlja && zameneUlja.length > 0
+          ? zameneUlja[0].kilometraza + 11000
+          : null;
+
+        let trebaZamenaUlja = false;
+        if (sledecaZamenaKm) {
+          // Pretraži sve smene kroz sve mesece i korisnike
+          Object.values(groupedData).forEach((monthData) => {
+            Object.values(monthData.users).forEach((shifts) => {
+              if (shifts.some(shift => shift.kmSat && shift.kmSat > sledecaZamenaKm)) {
+                trebaZamenaUlja = true;
+              }
+            });
+          });
+        }
+
+        return (
+          <div className={`mb-4 p-2 rounded border-2 ${
+            trebaZamenaUlja
+              ? "bg-red-100 border-red-500 border-4 animate-pulse"
+              : "bg-blue-50 border-blue-300"
+          }`}>
+            <div className="flex flex-wrap items-center gap-2">
+              {zameneUlja && zameneUlja.length > 0 ? (
+                <>
+                  <span className={`text-sm font-semibold ${
+                    trebaZamenaUlja ? "text-red-900" : "text-blue-900"
+                  }`}>
+                    {zameneUlja[0].kilometraza.toLocaleString("sr-RS")} km
+                  </span>
+                  <span className={`text-sm ${
+                    trebaZamenaUlja ? "text-red-700" : "text-blue-700"
+                  }`}>- sledeća zamena</span>
+                  <span className="text-sm font-bold text-red-600">
+                    {(zameneUlja[0].kilometraza + 11000).toLocaleString("sr-RS")} km
+                  </span>
+                  {trebaZamenaUlja && (
+                    <span className="text-sm font-bold text-red-600 ml-2">
+                      ⚠️ ZAMENI ULJE!
+                    </span>
+                  )}
+                  <span className="text-sm text-gray-400 mx-2">|</span>
+                </>
+              ) : (
+                <span className="text-sm font-medium text-blue-800">Kilometraža:</span>
+              )}
+            <input
+              type="number"
+              placeholder="km..."
+              value={zamenaUljaKilometraza}
+              onChange={(e) => setZamenaUljaKilometraza(e.target.value)}
+              onKeyPress={(e) => {
+                if (e.key === "Enter") {
+                  handleAddZamenaUlja();
+                }
+              }}
+              className="w-32 border border-blue-300 rounded px-2 py-1 text-sm"
+            />
+            <button
+              onClick={handleAddZamenaUlja}
+              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+            >
+              Dodaj
+            </button>
+            <button
+              onClick={() => setShowZameneUlja(!showZameneUlja)}
+              className="ml-auto text-blue-700 underline text-sm hover:text-blue-900"
+            >
+              {showZameneUlja ? "Sakrij istoriju" : `Prikaži istoriju (${zameneUlja.length})`}
+            </button>
+          </div>
+
+          {/* Collapsible istorija zamena ulja */}
+          {showZameneUlja && (
+            <div className="mt-3 space-y-2 max-h-60 overflow-y-auto border-t border-blue-300 pt-2">
+              {zameneUlja && zameneUlja.length > 0 ? (
+                zameneUlja.map((zamena) => (
+                  <div
+                    key={zamena._id}
+                    className="bg-white border border-blue-200 rounded p-2 flex justify-between items-center gap-2"
+                  >
+                    <div className="flex-1">
+                      <p className="text-sm font-bold text-gray-800">
+                        {zamena.kilometraza.toLocaleString("sr-RS")} km
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        {new Date(zamena.createdAt).toLocaleDateString("sr-RS", {
+                          day: "numeric",
+                          month: "short",
+                          year: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleDeleteZamenaUlja(zamena._id)}
+                      className="text-red-600 hover:text-red-800 p-1"
+                      title="Obriši"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs text-gray-500 italic text-center py-2">
+                  Nema zapisa
+                </p>
+              )}
+            </div>
+          )}
+          </div>
+        );
+      })()}
 
       {Object.keys(groupedData).length === 0 ? (
         <p>Nema podataka za prikaz.</p>
@@ -315,9 +492,12 @@ const PregledPoDanima = () => {
               </h2>
               <div className="space-y-3 max-h-[600px] lg:max-h-[800px] overflow-y-auto pr-2">
                 {users.map((user) => {
-                  const userTotal = getUserTotalAmount(user.name);
+                  // Izračunaj iznos samo za trenutno izabrani mesec
+                  const userMonthTotal = selectedMonth
+                    ? getUserMonthTotalAmount(user.name, selectedMonth)
+                    : 0;
                   const multiplier = user.multiplier || 1;
-                  const calculatedAmount = userTotal * multiplier;
+                  const calculatedAmount = userMonthTotal * multiplier;
 
                   return (
                     <div
@@ -328,7 +508,7 @@ const PregledPoDanima = () => {
                         {user.name}
                       </h3>
                       <p className="text-xs sm:text-sm mb-1">
-                        <strong>Ukupan iznos:</strong> {userTotal.toFixed(2)}{" "}
+                        <strong>Ukupan iznos:</strong> {userMonthTotal.toFixed(2)}{" "}
                         RSD
                       </p>
 

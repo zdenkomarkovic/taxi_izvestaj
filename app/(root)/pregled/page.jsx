@@ -110,6 +110,10 @@ const Pregled = () => {
   // Funkcija za otvaranje edit modala
   const handleEdit = (shift) => {
     setEditingShift(shift);
+    // Konvertuj createdAt u format za datetime-local input
+    const date = new Date(shift.createdAt);
+    const dateString = date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
+
     setEditFormData({
       kmSat: shift.kmSat,
       kmSatPocetna: shift.kmSatPocetna,
@@ -122,6 +126,7 @@ const Pregled = () => {
       gotovina: shift.gotovina,
       plinRacun: shift.plin.racun,
       plinKilometraza: shift.plin.kilometraza,
+      datumVreme: dateString,
     });
   };
 
@@ -136,6 +141,20 @@ const Pregled = () => {
     if (!editingShift) return;
 
     try {
+      // Validacija - proveri da li su sve vrednosti validni brojevi
+      const requiredFields = [
+        'kmSat', 'kmSatPocetna', 'kmTax', 'kmTaxPocetna',
+        'kmGaz', 'kmGazPocetna', 'iznos', 'iznosPocetna',
+        'gotovina', 'plinRacun', 'plinKilometraza'
+      ];
+
+      for (const field of requiredFields) {
+        if (isNaN(editFormData[field]) || editFormData[field] === '') {
+          alert(`Polje ${field} mora biti validan broj`);
+          return;
+        }
+      }
+
       // Izračunaj razlike
       const kmSatRazlika = editFormData.kmSat - editFormData.kmSatPocetna;
       const kmTaxRazlika = editFormData.kmTax - editFormData.kmTaxPocetna;
@@ -143,23 +162,24 @@ const Pregled = () => {
       const iznosRazlika = editFormData.iznos - editFormData.iznosPocetna;
 
       const updateData = {
-        kmSat: editFormData.kmSat,
-        kmSatPocetna: editFormData.kmSatPocetna,
+        kmSat: Number(editFormData.kmSat),
+        kmSatPocetna: Number(editFormData.kmSatPocetna),
         kmSatRazlika,
-        kmTax: editFormData.kmTax,
-        kmTaxPocetna: editFormData.kmTaxPocetna,
+        kmTax: Number(editFormData.kmTax),
+        kmTaxPocetna: Number(editFormData.kmTaxPocetna),
         kmTaxRazlika,
-        kmGaz: editFormData.kmGaz,
-        kmGazPocetna: editFormData.kmGazPocetna,
+        kmGaz: Number(editFormData.kmGaz),
+        kmGazPocetna: Number(editFormData.kmGazPocetna),
         kmGazRazlika,
-        iznos: editFormData.iznos,
-        iznosPocetna: editFormData.iznosPocetna,
+        iznos: Number(editFormData.iznos),
+        iznosPocetna: Number(editFormData.iznosPocetna),
         iznosRazlika,
-        gotovina: editFormData.gotovina,
+        gotovina: Number(editFormData.gotovina),
         plin: {
-          racun: editFormData.plinRacun,
-          kilometraza: editFormData.plinKilometraza,
+          racun: Number(editFormData.plinRacun),
+          kilometraza: Number(editFormData.plinKilometraza),
         },
+        createdAt: editFormData.datumVreme,
       };
 
       await UpdateEndShift(editingShift._id, updateData);
@@ -400,6 +420,24 @@ const Pregled = () => {
             </div>
 
             <div className="space-y-4">
+              {/* Datum i vreme */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Datum i vreme
+                </label>
+                <input
+                  type="datetime-local"
+                  value={editFormData.datumVreme}
+                  onChange={(e) =>
+                    setEditFormData({
+                      ...editFormData,
+                      datumVreme: e.target.value,
+                    })
+                  }
+                  className="w-full border rounded px-3 py-2"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium mb-1">
