@@ -2,6 +2,8 @@
 
 import {
   GetEndShifts,
+  GetEndShiftsCount,
+  GetLastEndShiftId,
   DeleteEndShift,
   DeleteAnyEndShift,
   UpdateEndShift,
@@ -9,7 +11,9 @@ import {
 } from "@/lib/actions/endshift.action";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
-import { Trash2, Edit, X } from "lucide-react";
+import { Trash2, Edit, X, ChevronLeft, ChevronRight } from "lucide-react";
+
+const ITEMS_PER_PAGE = 24;
 
 const Pregled = () => {
   const { data: session } = useSession();
@@ -21,22 +25,31 @@ const Pregled = () => {
   const [editingShift, setEditingShift] = useState(null);
   const [editFormData, setEditFormData] = useState({});
   const [checkingInProgress, setCheckingInProgress] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
       if (!session?.user?.id) return;
 
+      setLoading(true);
+
       // Obični korisnici vide samo svoje zapise, admini vide sve
       const userId = session?.user?.role === "admin" ? null : session?.user?.id;
 
-      const data = await GetEndShifts(userId);
+      // Učitaj samo trenutnu stranicu
+      const data = await GetEndShifts(userId, currentPage, ITEMS_PER_PAGE);
       setResult(data);
 
-      // Čuvaj ID poslednjeg zapisa u celom sistemu (bez filtera)
-      const allData = await GetEndShifts(null);
-      if (allData && allData.length > 0) {
-        setLastRecordId(allData[0]._id);
-      }
+      // Dobij ukupan broj zapisa
+      const count = await GetEndShiftsCount(userId);
+      setTotalCount(count);
+      setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
+
+      // Dobij samo ID poslednjeg zapisa bez učitavanja svih podataka
+      const lastId = await GetLastEndShiftId();
+      setLastRecordId(lastId);
 
       setLoading(false);
     };
@@ -44,7 +57,7 @@ const Pregled = () => {
     if (session) {
       fetchData();
     }
-  }, [session]);
+  }, [session, currentPage]);
 
   const handleDelete = async (recordId) => {
     // Proveri da li je zapis već obrisan u ovoj sesiji
@@ -71,7 +84,8 @@ const Pregled = () => {
 
       alert("Zapis uspešno obrisan.");
 
-      // Osveži stranicu nakon pola sekunde
+      // Vrati se na prvu stranicu i osveži
+      setCurrentPage(1);
       setTimeout(() => {
         window.location.reload();
       }, 500);
@@ -228,13 +242,59 @@ const Pregled = () => {
     }
   };
 
-  if (loading) {
-    return <div className="container px-4 mt-20 mx-auto">Učitavanje...</div>;
+  if (loading && result.length === 0) {
+    return (
+      <div className="container px-4 mt-20 mx-auto text-center">
+        <div className="text-xl font-semibold">Učitavanje...</div>
+      </div>
+    );
   }
+
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToNextPage = () => goToPage(currentPage + 1);
+  const goToPreviousPage = () => goToPage(currentPage - 1);
 
   return (
     <>
-      <div className="lg:container px-4 mt-20 mx-auto grid md:grid-cols-3 lg:grid-cols-4">
+      {/* Paginacija - Gornja */}
+      {totalPages > 1 && (
+        <div className="lg:container px-4 mt-20 mx-auto">
+          <div className="flex items-center justify-center gap-2 mb-4">
+            <button
+              onClick={goToPreviousPage}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Prethodna
+            </button>
+            <span className="px-4 py-2 font-semibold">
+              Strana {currentPage} od {totalPages} ({totalCount} ukupno)
+            </span>
+            <button
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              Sledeća
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="lg:container px-4 mt-4 mx-auto grid md:grid-cols-3 lg:grid-cols-4 relative">
+        {loading && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+            <div className="text-xl font-semibold">Učitavanje...</div>
+          </div>
+        )}
         {result.map((shift) => {
           // Proveri da li je ovaj zapis poslednji u CELOM sistemu
           const isLastRecord = shift._id === lastRecordId;
@@ -404,6 +464,33 @@ const Pregled = () => {
           );
         })}
       </div>
+
+      {/* Paginacija - Donja */}
+      {totalPages > 1 && (
+        <div className="lg:container px-4 mt-8 mb-8 mx-auto">
+          <div className="flex items-center justify-center gap-2">
+            <button
+              onClick={goToPreviousPage}
+              disabled={currentPage === 1}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Prethodna
+            </button>
+            <span className="px-4 py-2 font-semibold">
+              Strana {currentPage} od {totalPages}
+            </span>
+            <button
+              onClick={goToNextPage}
+              disabled={currentPage === totalPages}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center gap-1"
+            >
+              Sledeća
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       {editingShift && (

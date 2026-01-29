@@ -7,7 +7,9 @@
       "Bash(npm run fix-admin:*)",
       "Bash(npm run build:*)",
       "Bash(npm run dev:*)",
-      "Bash(node scripts/add-multiplier-to-users.js:*)"
+      "Bash(node scripts/add-multiplier-to-users.js:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)"
     ]
   }
 }

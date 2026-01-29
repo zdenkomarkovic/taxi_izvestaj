@@ -1,6 +1,10 @@
 "use client";
 
-import { GetEndShifts } from "@/lib/actions/endshift.action";
+import {
+  GetAvailableMonths,
+  GetEndShiftsByMonth,
+  GetPreviousGasFill
+} from "@/lib/actions/endshift.action";
 import {
   getUsers,
   updateUserMultiplier,
@@ -20,7 +24,7 @@ import { Trash2 } from "lucide-react";
 const PregledPoDanima = () => {
   const { data: session } = useSession();
   const pathname = usePathname();
-  const [groupedData, setGroupedData] = useState({});
+  const [monthData, setMonthData] = useState(null); // Podaci za trenutno izabrani mesec
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState([]);
   const [editingMultiplier, setEditingMultiplier] = useState({});
@@ -29,119 +33,117 @@ const PregledPoDanima = () => {
   const [zamenaUljaKilometraza, setZamenaUljaKilometraza] = useState(""); // Kilometraža za zamenu ulja
   const [zameneUlja, setZameneUlja] = useState([]); // Lista svih zamena ulja
   const [showZameneUlja, setShowZameneUlja] = useState(false); // Prikaz/sakrivanje istorije
-  const [allShiftsSorted, setAllShiftsSorted] = useState([]); // Svi shift-ovi sortirani po datumu
+  const [availableMonths, setAvailableMonths] = useState([]); // Lista dostupnih meseci
   const [selectedMonth, setSelectedMonth] = useState(null); // Odabrani mesec za prikaz
+  const [previousGasFills, setPreviousGasFills] = useState({}); // Cache za prethodna sipanja plina
 
+  // Učitaj dostupne mesece pri prvom učitavanju
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchMonths = async () => {
       if (!session?.user?.id) return;
 
-      // Obični korisnici vide samo svoje zapise, admini vide sve
       const userId = session?.user?.role === "admin" ? null : session?.user?.id;
 
-      const data = await GetEndShifts(userId);
-
-      // Učitaj korisnike ako je admin
-      if (session?.user?.role === "admin") {
-        const allUsers = await getUsers();
-        console.log("Loaded users:", allUsers);
-        setUsers(allUsers);
-
-        // Učitaj zamene ulja
-        const zamene = await getZameneUlja();
-        setZameneUlja(zamene);
-      }
-
-      // Grupisanje po mesecu i korisniku
-      const grouped = {};
-
-      data.forEach((shift) => {
-        const shiftDate = new Date(shift.createdAt);
-        const userName = shift.user?.name || "Nepoznat korisnik";
-
-        // Mesec i godina
-        const monthYear = shiftDate.toLocaleDateString("sr-RS", {
-          month: "long",
-          year: "numeric",
-          timeZone: "Europe/Belgrade",
-        });
-
-        // Inicijalizuj strukture ako ne postoje
-        if (!grouped[monthYear]) {
-          grouped[monthYear] = {
-            users: {},
-          };
-        }
-
-        if (!grouped[monthYear].users[userName]) {
-          grouped[monthYear].users[userName] = [];
-        }
-
-        grouped[monthYear].users[userName].push(shift);
-      });
-
-      setGroupedData(grouped);
-
-      // Sortiraj sve shift-ove po datumu (najstariji -> najnoviji) za izračunavanje kilometraže
-      const sortedShifts = [...data].sort(
-        (a, b) => new Date(a.createdAt) - new Date(b.createdAt)
-      );
-      setAllShiftsSorted(sortedShifts);
+      // Učitaj dostupne mesece
+      const months = await GetAvailableMonths(userId);
+      setAvailableMonths(months);
 
       // Postavi trenutni mesec kao podrazumevani
-      if (!selectedMonth && Object.keys(grouped).length > 0) {
+      if (months.length > 0) {
         const currentDate = new Date();
-        const currentMonthYear = currentDate.toLocaleDateString("sr-RS", {
-          month: "long",
-          year: "numeric",
-          timeZone: "Europe/Belgrade",
-        });
+        const currentMonthKey = `${currentDate.getFullYear()}-${currentDate.getMonth() + 1}`;
 
-        // Ako postoji trenutni mesec u podacima, izaberi ga, inače izaberi najnoviji
-        if (grouped[currentMonthYear]) {
-          setSelectedMonth(currentMonthYear);
-        } else {
-          // Izaberi najnoviji mesec
-          const sortedMonths = Object.keys(grouped).sort((a, b) => {
-            return new Date(b) - new Date(a);
-          });
-          setSelectedMonth(sortedMonths[0]);
-        }
+        // Pronađi trenutni mesec ili izaberi najnoviji
+        const currentMonth = months.find(m => m.key === currentMonthKey);
+        setSelectedMonth(currentMonth ? currentMonth.key : months[0].key);
+      }
+
+      // Učitaj korisnike i zamene ulja ako je admin
+      if (session?.user?.role === "admin") {
+        const allUsers = await getUsers();
+        setUsers(allUsers);
+
+        const zamene = await getZameneUlja();
+        setZameneUlja(zamene);
       }
 
       setLoading(false);
     };
 
     if (session) {
-      fetchData();
+      fetchMonths();
     }
   }, [session]);
+
+  // Učitaj podatke za izabrani mesec
+  useEffect(() => {
+    const fetchMonthData = async () => {
+      if (!session?.user?.id || !selectedMonth) return;
+
+      setLoading(true);
+
+      const userId = session?.user?.role === "admin" ? null : session?.user?.id;
+      const monthInfo = availableMonths.find(m => m.key === selectedMonth);
+
+      if (!monthInfo) {
+        setLoading(false);
+        return;
+      }
+
+      // Učitaj podatke za izabrani mesec
+      const data = await GetEndShiftsByMonth(userId, monthInfo.year, monthInfo.month);
+
+      // Grupisanje po korisniku
+      const grouped = {
+        users: {}
+      };
+
+      data.forEach((shift) => {
+        const userName = shift.user?.name || "Nepoznat korisnik";
+
+        if (!grouped.users[userName]) {
+          grouped.users[userName] = [];
+        }
+
+        grouped.users[userName].push(shift);
+      });
+
+      setMonthData(grouped);
+
+      // Pre-fetch prethodna sipanja plina za sve smene u ovom mesecu
+      const gasFills = {};
+      for (const shift of data) {
+        const currentKm = shift.plin?.kilometraza || 0;
+        if (currentKm > 0) {
+          const predjenoKm = await GetPreviousGasFill(shift.createdAt, currentKm);
+          gasFills[shift._id] = predjenoKm;
+        }
+      }
+      setPreviousGasFills(gasFills);
+
+      setLoading(false);
+    };
+
+    if (selectedMonth && availableMonths.length > 0) {
+      fetchMonthData();
+    }
+  }, [session, selectedMonth, availableMonths]);
 
   // Funkcija koja vraća pređenu kilometražu za sipanje plina
   const getPredjenoKm = (currentShift) => {
     const currentKm = currentShift.plin?.kilometraza || 0;
     if (currentKm === 0) return 0;
 
-    // Pronađi prethodni shift sa sipanjem plina (kronološki pre ovog)
-    const currentIndex = allShiftsSorted.findIndex(
-      (s) => s._id === currentShift._id
-    );
-
-    if (currentIndex <= 0) return 0; // Nema prethodnog
-
-    // Traži unazad prvi shift koji ima sipanje plina
-    for (let i = currentIndex - 1; i >= 0; i--) {
-      const prevKm = allShiftsSorted[i].plin?.kilometraza || 0;
-      if (prevKm > 0) {
-        return currentKm - prevKm;
-      }
-    }
-
-    return 0; // Nema prethodnog sipanja
+    // Koristi keširane vrednosti
+    return previousGasFills[currentShift._id] || 0;
   };
 
-  if (loading) {
-    return <div className="container px-4 mt-20 mx-auto">Učitavanje...</div>;
+  if (loading && !monthData) {
+    return (
+      <div className="container px-4 mt-20 mx-auto text-center">
+        <div className="text-xl font-semibold">Učitavanje...</div>
+      </div>
+    );
   }
 
   const isAdmin = session?.user?.role === "admin";
@@ -178,25 +180,9 @@ const PregledPoDanima = () => {
     }
   };
 
-  // Izračunaj ukupan iznos po korisniku
-  const getUserTotalAmount = (userName) => {
+  // Izračunaj ukupan iznos po korisniku za trenutno izabrani mesec
+  const getUserMonthTotalAmount = (userName) => {
     let total = 0;
-    Object.values(groupedData).forEach((monthData) => {
-      if (monthData.users[userName]) {
-        monthData.users[userName].forEach((shift) => {
-          total +=
-            (shift.iznosRazlika || 0) -
-            (shift.umanjenje?.reduce((s, item) => s + item.iznos, 0) || 0);
-        });
-      }
-    });
-    return total;
-  };
-
-  // Izračunaj ukupan iznos po korisniku za određeni mesec
-  const getUserMonthTotalAmount = (userName, monthYear) => {
-    let total = 0;
-    const monthData = groupedData[monthYear];
     if (monthData && monthData.users[userName]) {
       monthData.users[userName].forEach((shift) => {
         total +=
@@ -207,11 +193,11 @@ const PregledPoDanima = () => {
     return total;
   };
 
-  // Izračunaj ukupan pomnožen iznos svih korisnika za određeni mesec
-  const getTotalMultipliedAmountsForMonth = (monthYear) => {
+  // Izračunaj ukupan pomnožen iznos svih korisnika za trenutno izabrani mesec
+  const getTotalMultipliedAmountsForMonth = () => {
     let total = 0;
     users.forEach((user) => {
-      const userAmount = getUserMonthTotalAmount(user.name, monthYear);
+      const userAmount = getUserMonthTotalAmount(user.name);
       const multiplier = user.multiplier || 1;
       total += userAmount * multiplier;
     });
@@ -309,24 +295,21 @@ const PregledPoDanima = () => {
     }
   };
 
-  // Dobij sortirane mesece (najnoviji prvo)
-  const availableMonths = Object.keys(groupedData).sort((a, b) => {
-    return new Date(b) - new Date(a);
-  });
-
   // Pronađi indeks trenutno odabranog meseca
-  const currentIndex = availableMonths.indexOf(selectedMonth);
+  const currentIndex = availableMonths.findIndex(m => m.key === selectedMonth);
 
   // Funkcije za navigaciju
   const goToNextMonth = () => {
     if (currentIndex > 0) {
-      setSelectedMonth(availableMonths[currentIndex - 1]);
+      setSelectedMonth(availableMonths[currentIndex - 1].key);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
   const goToPreviousMonth = () => {
     if (currentIndex < availableMonths.length - 1) {
-      setSelectedMonth(availableMonths[currentIndex + 1]);
+      setSelectedMonth(availableMonths[currentIndex + 1].key);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -344,14 +327,12 @@ const PregledPoDanima = () => {
           : null;
 
         let trebaZamenaUlja = false;
-        if (sledecaZamenaKm) {
-          // Pretraži sve smene kroz sve mesece i korisnike
-          Object.values(groupedData).forEach((monthData) => {
-            Object.values(monthData.users).forEach((shifts) => {
-              if (shifts.some(shift => shift.kmSat && shift.kmSat > sledecaZamenaKm)) {
-                trebaZamenaUlja = true;
-              }
-            });
+        if (sledecaZamenaKm && monthData) {
+          // Pretraži smene u trenutnom mesecu
+          Object.values(monthData.users).forEach((shifts) => {
+            if (shifts.some(shift => shift.kmSat && shift.kmSat > sledecaZamenaKm)) {
+              trebaZamenaUlja = true;
+            }
           });
         }
 
@@ -454,14 +435,14 @@ const PregledPoDanima = () => {
         );
       })()}
 
-      {Object.keys(groupedData).length === 0 ? (
+      {availableMonths.length === 0 ? (
         <p>Nema podataka za prikaz.</p>
       ) : (
         <>
           {/* Kontrole za navigaciju između meseci */}
           <div className="mb-4 sm:mb-6 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
             <div className="text-lg sm:text-xl font-bold text-blue-800 order-1 sm:order-2 mb-2 sm:mb-0">
-              {selectedMonth}
+              {availableMonths.find(m => m.key === selectedMonth)?.label || selectedMonth}
             </div>
 
             <div className="flex gap-2 w-full sm:w-auto order-2 sm:order-none">
@@ -483,7 +464,12 @@ const PregledPoDanima = () => {
             </div>
           </div>
 
-          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 pb-4">
+          <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 pb-4 relative">
+          {loading && (
+            <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+              <div className="text-xl font-semibold">Učitavanje...</div>
+            </div>
+          )}
           {/* Sekcija za množioce (samo za admina) - uvek prikaži prvo */}
           {isAdmin && users.length > 0 && (
             <div className="border-2 border-purple-600 p-3 sm:p-4 bg-purple-50 shadow-lg w-full lg:min-w-[400px] lg:max-w-[400px] flex-shrink-0">
@@ -493,9 +479,7 @@ const PregledPoDanima = () => {
               <div className="space-y-3 max-h-[600px] lg:max-h-[800px] overflow-y-auto pr-2">
                 {users.map((user) => {
                   // Izračunaj iznos samo za trenutno izabrani mesec
-                  const userMonthTotal = selectedMonth
-                    ? getUserMonthTotalAmount(user.name, selectedMonth)
-                    : 0;
+                  const userMonthTotal = getUserMonthTotalAmount(user.name);
                   const multiplier = user.multiplier || 1;
                   const calculatedAmount = userMonthTotal * multiplier;
 
@@ -658,9 +642,8 @@ const PregledPoDanima = () => {
             </div>
           )}
 
-          {selectedMonth && groupedData[selectedMonth] && (() => {
-            const monthYear = selectedMonth;
-            const monthData = groupedData[selectedMonth];
+          {selectedMonth && monthData && (() => {
+            const monthYear = availableMonths.find(m => m.key === selectedMonth)?.label || selectedMonth;
 
             // Izračunaj ukupno za mesec
             const monthTotal = Object.values(monthData.users).reduce(
@@ -1053,7 +1036,7 @@ const PregledPoDanima = () => {
                         <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t-2 border-gray-400">
                           {(() => {
                             const totalMultipliedUsers =
-                              getTotalMultipliedAmountsForMonth(monthYear);
+                              getTotalMultipliedAmountsForMonth();
                             const netoAmount =
                               monthTotal -
                               monthPlinTotal -
