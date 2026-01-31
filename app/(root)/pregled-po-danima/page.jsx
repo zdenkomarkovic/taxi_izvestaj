@@ -58,13 +58,14 @@ const PregledPoDanima = () => {
         setSelectedMonth(currentMonth ? currentMonth.key : months[0].key);
       }
 
-      // Učitaj korisnike i zamene ulja ako je admin
+      // Učitaj zamene ulja za sve korisnike
+      const zamene = await getZameneUlja();
+      setZameneUlja(zamene);
+
+      // Učitaj korisnike samo ako je admin
       if (session?.user?.role === "admin") {
         const allUsers = await getUsers();
         setUsers(allUsers);
-
-        const zamene = await getZameneUlja();
-        setZameneUlja(zamene);
       }
 
       setLoading(false);
@@ -320,7 +321,7 @@ const PregledPoDanima = () => {
       </h1>
 
       {/* Kompaktna sekcija za unos zamene ulja */}
-      {isAdmin && (() => {
+      {(() => {
         // Proveri da li bilo koja smena ima kmSat veći od sledeće zamene
         const sledecaZamenaKm = zameneUlja && zameneUlja.length > 0
           ? zameneUlja[0].kilometraza + 11000
@@ -361,39 +362,43 @@ const PregledPoDanima = () => {
                       ⚠️ ZAMENI ULJE!
                     </span>
                   )}
-                  <span className="text-sm text-gray-400 mx-2">|</span>
+                  {isAdmin && <span className="text-sm text-gray-400 mx-2">|</span>}
                 </>
               ) : (
-                <span className="text-sm font-medium text-blue-800">Kilometraža:</span>
+                isAdmin && <span className="text-sm font-medium text-blue-800">Kilometraža:</span>
               )}
-            <input
-              type="number"
-              placeholder="km..."
-              value={zamenaUljaKilometraza}
-              onChange={(e) => setZamenaUljaKilometraza(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter") {
-                  handleAddZamenaUlja();
-                }
-              }}
-              className="w-32 border border-blue-300 rounded px-2 py-1 text-sm"
-            />
-            <button
-              onClick={handleAddZamenaUlja}
-              className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
-            >
-              Dodaj
-            </button>
-            <button
-              onClick={() => setShowZameneUlja(!showZameneUlja)}
-              className="ml-auto text-blue-700 underline text-sm hover:text-blue-900"
-            >
-              {showZameneUlja ? "Sakrij istoriju" : `Prikaži istoriju (${zameneUlja.length})`}
-            </button>
+            {isAdmin && (
+              <>
+                <input
+                  type="number"
+                  placeholder="km..."
+                  value={zamenaUljaKilometraza}
+                  onChange={(e) => setZamenaUljaKilometraza(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      handleAddZamenaUlja();
+                    }
+                  }}
+                  className="w-32 border border-blue-300 rounded px-2 py-1 text-sm"
+                />
+                <button
+                  onClick={handleAddZamenaUlja}
+                  className="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700"
+                >
+                  Dodaj
+                </button>
+                <button
+                  onClick={() => setShowZameneUlja(!showZameneUlja)}
+                  className="ml-auto text-blue-700 underline text-sm hover:text-blue-900"
+                >
+                  {showZameneUlja ? "Sakrij istoriju" : `Prikaži istoriju (${zameneUlja.length})`}
+                </button>
+              </>
+            )}
           </div>
 
-          {/* Collapsible istorija zamena ulja */}
-          {showZameneUlja && (
+          {/* Collapsible istorija zamena ulja (samo admin) */}
+          {isAdmin && showZameneUlja && (
             <div className="mt-3 space-y-2 max-h-60 overflow-y-auto border-t border-blue-300 pt-2">
               {zameneUlja && zameneUlja.length > 0 ? (
                 zameneUlja.map((zamena) => (
@@ -415,13 +420,15 @@ const PregledPoDanima = () => {
                         })}
                       </p>
                     </div>
-                    <button
-                      onClick={() => handleDeleteZamenaUlja(zamena._id)}
-                      className="text-red-600 hover:text-red-800 p-1"
-                      title="Obriši"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    {isAdmin && (
+                      <button
+                        onClick={() => handleDeleteZamenaUlja(zamena._id)}
+                        className="text-red-600 hover:text-red-800 p-1"
+                        title="Obriši"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
                   </div>
                 ))
               ) : (
@@ -958,8 +965,8 @@ const PregledPoDanima = () => {
                       </div>
                     </div>
 
-                    {/* Desna strana - potrošnja (samo za admina) */}
-                    {isAdmin && monthPotrosnja.length > 0 && (
+                    {/* Desna strana - potrošnja */}
+                    {monthPotrosnja.length > 0 && (
                       <div className="w-full lg:w-80 border-t-2 lg:border-t-0 lg:border-l-2 border-teal-300 pt-4 lg:pt-0 lg:pl-4">
                         <h3 className="text-base sm:text-lg font-bold text-teal-700 mb-3 text-center">
                           📊 Potrošnja
