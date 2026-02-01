@@ -41,6 +41,11 @@ const StopSchema = new Schema(
     ],
     userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
     isChecked: { type: Boolean, default: false },
+    // Polja koja prate da li su početne vrednosti ručno promenjene
+    kmSatPocetnaChanged: { type: Boolean, default: false },
+    kmTaxPocetnaChanged: { type: Boolean, default: false },
+    kmGazPocetnaChanged: { type: Boolean, default: false },
+    iznosPocetnaChanged: { type: Boolean, default: false },
   },
   { timestamps: true }
 );

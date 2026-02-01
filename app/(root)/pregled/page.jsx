@@ -13,7 +13,7 @@ import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
 import { Trash2, Edit, X, ChevronLeft, ChevronRight } from "lucide-react";
 
-const ITEMS_PER_PAGE = 24;
+const ITEMS_PER_PAGE = 8;
 
 const Pregled = () => {
   const { data: session } = useSession();
@@ -38,12 +38,38 @@ const Pregled = () => {
       // Obični korisnici vide samo svoje zapise, admini vide sve
       const userId = session?.user?.role === "admin" ? null : session?.user?.id;
 
+      // Filtriraj po datumu samo za obične korisnike (trenutni i prošli mesec)
+      let dateFilter = null;
+      if (session?.user?.role !== "admin") {
+        const now = new Date();
+        const firstDayOfCurrentMonth = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          1
+        );
+        const firstDayOfPreviousMonth = new Date(
+          now.getFullYear(),
+          now.getMonth() - 1,
+          1
+        );
+
+        dateFilter = {
+          startDate: firstDayOfPreviousMonth,
+          endDate: new Date(now.getFullYear(), now.getMonth() + 1, 1), // Prvi dan sledećeg meseca
+        };
+      }
+
       // Učitaj samo trenutnu stranicu
-      const data = await GetEndShifts(userId, currentPage, ITEMS_PER_PAGE);
+      const data = await GetEndShifts(
+        userId,
+        currentPage,
+        ITEMS_PER_PAGE,
+        dateFilter
+      );
       setResult(data);
 
       // Dobij ukupan broj zapisa
-      const count = await GetEndShiftsCount(userId);
+      const count = await GetEndShiftsCount(userId, dateFilter);
       setTotalCount(count);
       setTotalPages(Math.ceil(count / ITEMS_PER_PAGE));
 
@@ -140,6 +166,11 @@ const Pregled = () => {
       gotovina: shift.gotovina,
       plinRacun: shift.plin.racun,
       plinKilometraza: shift.plin.kilometraza,
+      benzin: shift.benzin || [],
+      kartica: shift.kartica || [],
+      troskovi: shift.troskovi || [],
+      prekoRacuna: shift.prekoRacuna || [],
+      umanjenje: shift.umanjenje || [],
       datumVreme: dateString,
     });
   };
@@ -157,13 +188,21 @@ const Pregled = () => {
     try {
       // Validacija - proveri da li su sve vrednosti validni brojevi
       const requiredFields = [
-        'kmSat', 'kmSatPocetna', 'kmTax', 'kmTaxPocetna',
-        'kmGaz', 'kmGazPocetna', 'iznos', 'iznosPocetna',
-        'gotovina', 'plinRacun', 'plinKilometraza'
+        "kmSat",
+        "kmSatPocetna",
+        "kmTax",
+        "kmTaxPocetna",
+        "kmGaz",
+        "kmGazPocetna",
+        "iznos",
+        "iznosPocetna",
+        "gotovina",
+        "plinRacun",
+        "plinKilometraza",
       ];
 
       for (const field of requiredFields) {
-        if (isNaN(editFormData[field]) || editFormData[field] === '') {
+        if (isNaN(editFormData[field]) || editFormData[field] === "") {
           alert(`Polje ${field} mora biti validan broj`);
           return;
         }
@@ -193,6 +232,11 @@ const Pregled = () => {
           racun: Number(editFormData.plinRacun),
           kilometraza: Number(editFormData.plinKilometraza),
         },
+        benzin: editFormData.benzin,
+        kartica: editFormData.kartica,
+        troskovi: editFormData.troskovi,
+        prekoRacuna: editFormData.prekoRacuna,
+        umanjenje: editFormData.umanjenje,
         createdAt: editFormData.datumVreme,
       };
 
@@ -253,7 +297,7 @@ const Pregled = () => {
   const goToPage = (page) => {
     if (page >= 1 && page <= totalPages) {
       setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
@@ -289,7 +333,7 @@ const Pregled = () => {
         </div>
       )}
 
-      <div className="lg:container px-4 mt-4 mx-auto grid md:grid-cols-3 lg:grid-cols-4 relative">
+      <div className={`lg:container px-4 mx-auto grid md:grid-cols-3 lg:grid-cols-4 relative ${totalPages > 1 ? 'mt-4' : 'mt-20'}`}>
         {loading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
             <div className="text-xl font-semibold">Učitavanje...</div>
@@ -308,7 +352,7 @@ const Pregled = () => {
             <div
               key={shift._id}
               className={`border-2 p-5 m-2 relative transition-colors ${
-                shift.isChecked ? 'bg-gray-100' : 'bg-white'
+                shift.isChecked ? "bg-gray-100" : "bg-white"
               }`}
             >
               {/* Checkbox za čekiranje (samo za admina) */}
@@ -317,10 +361,14 @@ const Pregled = () => {
                   <input
                     type="checkbox"
                     checked={shift.isChecked || false}
-                    onChange={(e) => handleToggleCheck(e, shift._id, shift.isChecked)}
+                    onChange={(e) =>
+                      handleToggleCheck(e, shift._id, shift.isChecked)
+                    }
                     disabled={checkingInProgress}
                     className="w-5 h-5 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                    title={shift.isChecked ? "Rasčekiraj karticu" : "Čekiraj karticu"}
+                    title={
+                      shift.isChecked ? "Rasčekiraj karticu" : "Čekiraj karticu"
+                    }
                   />
                 </div>
               )}
@@ -340,22 +388,54 @@ const Pregled = () => {
                 })}
               </p>
               <p>
-                Km sat: {shift.kmSat} - {shift.kmSatPocetna} ={" "}
-                {shift.kmSatRazlika}
+                Km sat: {shift.kmSat} -{" "}
+                <span
+                  className={
+                    shift.kmSatPocetnaChanged ? "text-red-600 font-bold" : ""
+                  }
+                >
+                  {shift.kmSatPocetna}
+                </span>{" "}
+                = {shift.kmSatRazlika}
               </p>
               <p>
-                Km tax: {shift.kmTax} - {shift.kmTaxPocetna} ={" "}
-                {shift.kmTaxRazlika}{" "}
+                Km tax: {shift.kmTax} -{" "}
+                <span
+                  className={
+                    shift.kmTaxPocetnaChanged ? "text-red-600 font-bold" : ""
+                  }
+                >
+                  {shift.kmTaxPocetna}
+                </span>{" "}
+                = {shift.kmTaxRazlika}{" "}
               </p>
               <p>
-                Km gaz: {shift.kmGaz} - {shift.kmGazPocetna} ={" "}
-                {shift.kmGazRazlika}{" "}
+                Km gaz: {shift.kmGaz} -{" "}
+                <span
+                  className={
+                    shift.kmGazPocetnaChanged ? "text-red-600 font-bold" : ""
+                  }
+                >
+                  {shift.kmGazPocetna}
+                </span>{" "}
+                = {shift.kmGazRazlika}{" "}
               </p>
               <p>
-                Taximetar: {shift.iznos} - {shift.iznosPocetna} ={" "}
+                Taximetar: {shift.iznos} -{" "}
+                <span
+                  className={
+                    shift.iznosPocetnaChanged ? "text-red-600 font-bold" : ""
+                  }
+                >
+                  {shift.iznosPocetna}
+                </span>{" "}
+                ={" "}
                 <b>
                   {shift.iznosRazlika -
-                    (shift.umanjenje?.reduce((sum, item) => sum + item.iznos, 0) || 0)}
+                    (shift.umanjenje?.reduce(
+                      (sum, item) => sum + item.iznos,
+                      0
+                    ) || 0)}
                 </b>
               </p>
               <p>
@@ -715,6 +795,310 @@ const Pregled = () => {
                   }
                   className="w-full border rounded px-3 py-2"
                 />
+              </div>
+
+              {/* Benzin */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Benzin</label>
+                {editFormData.benzin?.map((value, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="number"
+                      value={value}
+                      onChange={(e) => {
+                        const newBenzin = [...editFormData.benzin];
+                        newBenzin[index] = parseFloat(e.target.value) || 0;
+                        setEditFormData({ ...editFormData, benzin: newBenzin });
+                      }}
+                      className="flex-1 border rounded px-3 py-2"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newBenzin = editFormData.benzin.filter(
+                          (_, i) => i !== index
+                        );
+                        setEditFormData({ ...editFormData, benzin: newBenzin });
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded"
+                    >
+                      Ukloni
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditFormData({
+                      ...editFormData,
+                      benzin: [...(editFormData.benzin || []), 0],
+                    });
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm"
+                >
+                  Dodaj benzin
+                </button>
+              </div>
+
+              {/* Kartica */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Kartica
+                </label>
+                {editFormData.kartica?.map((value, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="number"
+                      value={value}
+                      onChange={(e) => {
+                        const newKartica = [...editFormData.kartica];
+                        newKartica[index] = parseFloat(e.target.value) || 0;
+                        setEditFormData({
+                          ...editFormData,
+                          kartica: newKartica,
+                        });
+                      }}
+                      className="flex-1 border rounded px-3 py-2"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newKartica = editFormData.kartica.filter(
+                          (_, i) => i !== index
+                        );
+                        setEditFormData({
+                          ...editFormData,
+                          kartica: newKartica,
+                        });
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded"
+                    >
+                      Ukloni
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditFormData({
+                      ...editFormData,
+                      kartica: [...(editFormData.kartica || []), 0],
+                    });
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm"
+                >
+                  Dodaj karticu
+                </button>
+              </div>
+
+              {/* Troškovi */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Troškovi
+                </label>
+                {editFormData.troskovi?.map((trosak, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="number"
+                      placeholder="Iznos"
+                      value={trosak.iznos}
+                      onChange={(e) => {
+                        const newTroskovi = [...editFormData.troskovi];
+                        newTroskovi[index].iznos =
+                          parseFloat(e.target.value) || 0;
+                        setEditFormData({
+                          ...editFormData,
+                          troskovi: newTroskovi,
+                        });
+                      }}
+                      className="w-1/3 border rounded px-3 py-2"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Opis"
+                      value={trosak.opis}
+                      onChange={(e) => {
+                        const newTroskovi = [...editFormData.troskovi];
+                        newTroskovi[index].opis = e.target.value;
+                        setEditFormData({
+                          ...editFormData,
+                          troskovi: newTroskovi,
+                        });
+                      }}
+                      className="flex-1 border rounded px-3 py-2"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newTroskovi = editFormData.troskovi.filter(
+                          (_, i) => i !== index
+                        );
+                        setEditFormData({
+                          ...editFormData,
+                          troskovi: newTroskovi,
+                        });
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded"
+                    >
+                      Ukloni
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditFormData({
+                      ...editFormData,
+                      troskovi: [
+                        ...(editFormData.troskovi || []),
+                        { iznos: 0, opis: "" },
+                      ],
+                    });
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm"
+                >
+                  Dodaj trošak
+                </button>
+              </div>
+
+              {/* Preko računa */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Preko računa
+                </label>
+                {editFormData.prekoRacuna?.map((racun, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="number"
+                      placeholder="Iznos"
+                      value={racun.iznos}
+                      onChange={(e) => {
+                        const newPrekoRacuna = [...editFormData.prekoRacuna];
+                        newPrekoRacuna[index].iznos =
+                          parseFloat(e.target.value) || 0;
+                        setEditFormData({
+                          ...editFormData,
+                          prekoRacuna: newPrekoRacuna,
+                        });
+                      }}
+                      className="w-1/3 border rounded px-3 py-2"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Opis"
+                      value={racun.opis}
+                      onChange={(e) => {
+                        const newPrekoRacuna = [...editFormData.prekoRacuna];
+                        newPrekoRacuna[index].opis = e.target.value;
+                        setEditFormData({
+                          ...editFormData,
+                          prekoRacuna: newPrekoRacuna,
+                        });
+                      }}
+                      className="flex-1 border rounded px-3 py-2"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newPrekoRacuna = editFormData.prekoRacuna.filter(
+                          (_, i) => i !== index
+                        );
+                        setEditFormData({
+                          ...editFormData,
+                          prekoRacuna: newPrekoRacuna,
+                        });
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded"
+                    >
+                      Ukloni
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditFormData({
+                      ...editFormData,
+                      prekoRacuna: [
+                        ...(editFormData.prekoRacuna || []),
+                        { iznos: 0, opis: "" },
+                      ],
+                    });
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm"
+                >
+                  Dodaj preko računa
+                </button>
+              </div>
+
+              {/* Umanjenje */}
+              <div>
+                <label className="block text-sm font-medium mb-1">
+                  Umanjenje
+                </label>
+                {editFormData.umanjenje?.map((item, index) => (
+                  <div key={index} className="flex gap-2 mb-2">
+                    <input
+                      type="number"
+                      placeholder="Iznos"
+                      value={item.iznos}
+                      onChange={(e) => {
+                        const newUmanjenje = [...editFormData.umanjenje];
+                        newUmanjenje[index].iznos =
+                          parseFloat(e.target.value) || 0;
+                        setEditFormData({
+                          ...editFormData,
+                          umanjenje: newUmanjenje,
+                        });
+                      }}
+                      className="w-1/3 border rounded px-3 py-2"
+                    />
+                    <input
+                      type="text"
+                      placeholder="Opis"
+                      value={item.opis}
+                      onChange={(e) => {
+                        const newUmanjenje = [...editFormData.umanjenje];
+                        newUmanjenje[index].opis = e.target.value;
+                        setEditFormData({
+                          ...editFormData,
+                          umanjenje: newUmanjenje,
+                        });
+                      }}
+                      className="flex-1 border rounded px-3 py-2"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const newUmanjenje = editFormData.umanjenje.filter(
+                          (_, i) => i !== index
+                        );
+                        setEditFormData({
+                          ...editFormData,
+                          umanjenje: newUmanjenje,
+                        });
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded"
+                    >
+                      Ukloni
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditFormData({
+                      ...editFormData,
+                      umanjenje: [
+                        ...(editFormData.umanjenje || []),
+                        { iznos: 0, opis: "" },
+                      ],
+                    });
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white px-3 py-2 rounded text-sm"
+                >
+                  Dodaj umanjenje
+                </button>
               </div>
             </div>
 

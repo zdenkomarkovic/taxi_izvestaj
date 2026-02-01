@@ -43,9 +43,10 @@ const PregledPoDanima = () => {
       if (!session?.user?.id) return;
 
       const userId = session?.user?.role === "admin" ? null : session?.user?.id;
+      const isAdmin = session?.user?.role === "admin";
 
       // Učitaj dostupne mesece
-      const months = await GetAvailableMonths(userId);
+      const months = await GetAvailableMonths(userId, isAdmin);
       setAvailableMonths(months);
 
       // Postavi trenutni mesec kao podrazumevani
@@ -92,7 +93,8 @@ const PregledPoDanima = () => {
       }
 
       // Učitaj podatke za izabrani mesec
-      const data = await GetEndShiftsByMonth(userId, monthInfo.year, monthInfo.month);
+      const isAdmin = session?.user?.role === "admin";
+      const data = await GetEndShiftsByMonth(userId, monthInfo.year, monthInfo.month, isAdmin);
 
       // Grupisanje po korisniku
       const grouped = {

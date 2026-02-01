@@ -225,6 +225,12 @@ const StopForm = ({ data }) => {
       const kmGazPocetna = Number(values.kmGazPocetna) || 0;
       const iznosPocetna = Number(values.iznosPocetna) || 0;
 
+      // Proveri da li su početne vrednosti promenjene u odnosu na poslednji end shift
+      const kmSatPocetnaChanged = lastEndShift ? (kmSatPocetna !== Number(lastEndShift.kmSat)) : false;
+      const kmTaxPocetnaChanged = lastEndShift ? (kmTaxPocetna !== Number(lastEndShift.kmTax)) : false;
+      const kmGazPocetnaChanged = lastEndShift ? (kmGazPocetna !== Number(lastEndShift.kmGaz)) : false;
+      const iznosPocetnaChanged = lastEndShift ? (iznosPocetna !== Number(lastEndShift.iznos)) : false;
+
       const kmSatRazlika = Number(values.kmSat) - kmSatPocetna;
       const kmTaxRazlika = Number(values.kmTax) - kmTaxPocetna;
       const kmGazRazlika = Number(values.kmGaz) - kmGazPocetna;
@@ -264,6 +270,10 @@ const StopForm = ({ data }) => {
         prekoRacuna: prekoRacuna,
         troskovi: troskovi,
         umanjenje: umanjenje,
+        kmSatPocetnaChanged: kmSatPocetnaChanged,
+        kmTaxPocetnaChanged: kmTaxPocetnaChanged,
+        kmGazPocetnaChanged: kmGazPocetnaChanged,
+        iznosPocetnaChanged: iznosPocetnaChanged,
         userId: session.user.id,
         path: pathname,
       });
