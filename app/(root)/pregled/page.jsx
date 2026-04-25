@@ -8,6 +8,7 @@ import {
   DeleteAnyEndShift,
   UpdateEndShift,
   ToggleCheckEndShift,
+  GetAllUsers,
 } from "@/lib/actions/endshift.action";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
@@ -28,6 +29,7 @@ const Pregled = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [allUsers, setAllUsers] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -84,6 +86,12 @@ const Pregled = () => {
       fetchData();
     }
   }, [session, currentPage]);
+
+  useEffect(() => {
+    if (session?.user?.role === "admin") {
+      GetAllUsers().then(setAllUsers).catch(console.error);
+    }
+  }, [session]);
 
   const handleDelete = async (recordId) => {
     // Proveri da li je zapis već obrisan u ovoj sesiji
@@ -155,6 +163,7 @@ const Pregled = () => {
     const dateString = date.toISOString().slice(0, 16); // Format: YYYY-MM-DDTHH:mm
 
     setEditFormData({
+      userId: shift.userId,
       kmSat: shift.kmSat,
       kmSatPocetna: shift.kmSatPocetna,
       kmTax: shift.kmTax,
@@ -215,6 +224,7 @@ const Pregled = () => {
       const iznosRazlika = editFormData.iznos - editFormData.iznosPocetna;
 
       const updateData = {
+        userId: editFormData.userId,
         kmSat: Number(editFormData.kmSat),
         kmSatPocetna: Number(editFormData.kmSatPocetna),
         kmSatRazlika,
@@ -587,6 +597,29 @@ const Pregled = () => {
             </div>
 
             <div className="space-y-4">
+              {/* Dodeli korisniku */}
+              {allUsers.length > 0 && (
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Korisnik
+                  </label>
+                  <select
+                    value={editFormData.userId || ""}
+                    onChange={(e) =>
+                      setEditFormData({ ...editFormData, userId: e.target.value })
+                    }
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    <option value="" disabled>Izaberi korisnika</option>
+                    {allUsers.map((user) => (
+                      <option key={user.id} value={user.id}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               {/* Datum i vreme */}
               <div>
                 <label className="block text-sm font-medium mb-1">

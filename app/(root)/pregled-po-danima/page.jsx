@@ -486,7 +486,7 @@ const PregledPoDanima = () => {
                 Pregled po korisniku - Množioci
               </h2>
               <div className="space-y-3 max-h-[600px] lg:max-h-[800px] overflow-y-auto pr-2">
-                {users.map((user) => {
+                {users.filter((user) => monthData?.users?.[user.name]?.length > 0).map((user) => {
                   // Izračunaj iznos samo za trenutno izabrani mesec
                   const userMonthTotal = getUserMonthTotalAmount(user.name);
                   const multiplier = user.multiplier || 1;
